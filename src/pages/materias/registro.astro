@@ -2,47 +2,74 @@
 import Layout from '../../layouts/Layout.astro';
 ---
 <Layout title="Registrar materia - Asistente de Estudio">
-  <h1>Registrar nueva materia</h1>
+  <div class="materia-registro-wrap">
+    <h1>Registrar nueva materia</h1>
 
-  <form class="form-registro" id="form-registro">
-    <div class="form-group">
-      <label for="nombre">Nombre de la materia</label>
-      <input type="text" id="nombre" name="nombre" required placeholder="Ej: Matemáticas" />
-    </div>
-    <div class="form-group">
-      <label for="fecha">Fecha del examen</label>
-      <input type="date" id="fecha" name="fecha" required />
-    </div>
-    <div class="form-group">
-      <label for="prioridad">Prioridad</label>
-      <select id="prioridad" name="prioridad" required>
-        <option value="alta">Alta</option>
-        <option value="media">Media</option>
-        <option value="baja">Baja</option>
-      </select>
-    </div>
-    <button type="submit" class="btn btn-primary btn-submit">Enviar</button>
-  </form>
+    <form class="form-materia" id="form-registro">
+      <div class="form-group">
+        <label for="nombre">Nombre de la materia</label>
+        <input type="text" id="nombre" name="nombre" required placeholder="Ej: Matemáticas" />
+      </div>
+      <div class="form-group">
+        <label for="fecha">Fecha del examen</label>
+        <input type="date" id="fecha" name="fecha" required />
+      </div>
+      <div class="form-group">
+        <label for="prioridad">Prioridad</label>
+        <select id="prioridad" name="prioridad" required>
+          <option value="alta">Alta</option>
+          <option value="media">Media</option>
+          <option value="baja">Baja</option>
+        </select>
+      </div>
+      <button type="submit" class="btn btn-primary btn-submit">Enviar</button>
+    </form>
 
-  <p class="form-note">En este prototipo el formulario muestra un mensaje de confirmación. Los datos no se guardan.</p>
+    <p class="form-note">En este prototipo el formulario muestra un mensaje de confirmación. Los datos no se guardan.</p>
+  </div>
 </Layout>
 
 <style>
-  .form-registro {
+  .materia-registro-wrap {
+    width: 100%;
+    max-width: 480px;
+    margin: 0 auto;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+  }
+
+  .materia-registro-wrap h1 {
+    text-align: center;
+    width: 100%;
+  }
+
+  .form-materia {
+    width: 100%;
     max-width: 420px;
     background: var(--card);
-    padding: 2rem;
+    padding: clamp(1.25rem, 4vw, 2rem);
     border-radius: var(--radius);
     box-shadow: var(--shadow);
   }
+
   .btn-submit {
     width: 100%;
     margin-top: 0.5rem;
   }
+
   .form-note {
     margin-top: 1.5rem;
     color: var(--text-muted);
     font-size: 0.9rem;
+    text-align: center;
+    width: 100%;
+  }
+
+  @media (max-width: 479px) {
+    .form-materia {
+      padding: 1.25rem;
+    }
   }
 </style>
 
