@@ -15,13 +15,17 @@ const { title = 'Asistente de Estudio' } = Astro.props;
   <body>
     <header class="header">
       <a href="/" class="header-title">Asistente de Estudio</a>
-      <nav class="nav">
+      <nav class="nav" id="main-nav">
         <a href="/">Inicio</a>
         <a href="/dashboard">Dashboard</a>
         <a href="/materias/registro">Registrar materia</a>
         <a href="/premium">Premium</a>
-        <a href="/login">Ingresar</a>
-        <a href="/registro">Registro</a>
+        <a href="/login" data-auth="guest">Ingresar</a>
+        <a href="/registro" data-auth="guest">Registro</a>
+        <span class="user-pill" id="user-pill" data-auth="user"></span>
+        <button type="button" class="btn btn-outline btn-logout" id="logout-btn" data-auth="user">
+          Cerrar sesión
+        </button>
       </nav>
     </header>
     <main class="main">
@@ -32,3 +36,43 @@ const { title = 'Asistente de Estudio' } = Astro.props;
     </footer>
   </body>
 </html>
+
+<script>
+  const logoutBtn = document.getElementById('logout-btn');
+  const userPill = document.getElementById('user-pill');
+  const sessionRaw = localStorage.getItem('userSession');
+  const isLoggedIn = Boolean(sessionRaw);
+  const session = sessionRaw ? JSON.parse(sessionRaw) : null;
+
+  document.querySelectorAll('[data-auth="guest"]').forEach((el) => {
+    (el as HTMLElement).style.display = isLoggedIn ? 'none' : 'inline-flex';
+  });
+  document.querySelectorAll('[data-auth="user"]').forEach((el) => {
+    (el as HTMLElement).style.display = isLoggedIn ? 'inline-flex' : 'none';
+  });
+  if (userPill && session?.nombre) {
+    userPill.textContent = `Hola, ${session.nombre}`;
+  }
+
+  logoutBtn?.addEventListener('click', () => {
+    localStorage.removeItem('userSession');
+    window.location.href = '/';
+  });
+</script>
+
+<style>
+  .btn-logout {
+    padding: 0.45rem 1rem;
+    min-height: auto;
+  }
+  .user-pill {
+    display: inline-flex;
+    align-items: center;
+    padding: 0.35rem 0.7rem;
+    border-radius: 999px;
+    background: rgba(74, 144, 217, 0.12);
+    color: var(--accent);
+    font-weight: 600;
+    font-size: 0.85rem;
+  }
+</style>
