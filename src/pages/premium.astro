@@ -1,23 +1,35 @@
 ---
 import Layout from '../layouts/Layout.astro';
 ---
-<Layout title="Funciones Premium - Asistente de Estudio">
-  <h1>Funciones Premium</h1>
+<Layout title="Plan Premium - Asistente de Estudio">
+  <h1>Plan Premium</h1>
+  <p class="premium-intro">
+    Desbloquea funciones avanzadas para estudiar con más profundidad y mejor seguimiento.
+  </p>
+
+  <section class="premium-card highlight">
+    <div class="price-block">
+      <span class="price-tag">USD $9.99</span>
+      <span class="price-period">/ mes</span>
+    </div>
+    <h2 class="section-title">Todo lo que incluye Premium</h2>
+    <ul class="premium-list">
+      <li>Respuestas de IA nivel experto con más profundidad.</li>
+      <li>Hasta 10 preguntas tipo quiz por sesión.</li>
+      <li>Planes de estudio más detallados por materia.</li>
+      <li>Acceso prioritario a nuevas funciones.</li>
+    </ul>
+    <button type="button" class="btn btn-primary btn-cta" id="btn-vudy">Suscribirme</button>
+    <div id="vudy-result" class="vudy-result" aria-live="polite"></div>
+  </section>
 
   <section class="premium-card">
     <h2 class="section-title">Explicación con IA</h2>
     <p class="premium-desc">Obtén explicaciones personalizadas de tus temas de estudio usando inteligencia artificial.</p>
-    <button type="button" class="btn btn-primary btn-ia" id="btn-ia">Usar explicación de IA</button>
+    <button type="button" class="btn btn-outline btn-ia" id="btn-ia">Probar explicación</button>
   </section>
 
-  <section class="premium-card vudy-section">
-    <h2 class="section-title">Pago con Vudy (simulación)</h2>
-    <p class="premium-desc">Simulación de solicitud de pago usando Vudy API. No se realiza ningún cargo real.</p>
-    <button type="button" class="btn btn-outline btn-vudy" id="btn-vudy">Solicitar pago (Vudy)</button>
-    <div id="vudy-result" class="vudy-result" aria-live="polite"></div>
-  </section>
-
-  <p class="premium-link"><a href="/" class="link-dashboard">← Volver al Dashboard</a></p>
+  <p class="premium-link"><a href="/" class="link-dashboard">← Volver al inicio</a></p>
 </Layout>
 
 <style>
@@ -28,13 +40,41 @@ import Layout from '../layouts/Layout.astro';
     box-shadow: var(--shadow);
     margin-bottom: 2rem;
   }
+  .premium-intro {
+    color: var(--text-muted);
+    margin-bottom: 1.5rem;
+  }
+  .premium-card.highlight {
+    border: 1px solid rgba(74, 144, 217, 0.25);
+    background: linear-gradient(135deg, rgba(74, 144, 217, 0.12), #fff);
+  }
+  .price-block {
+    display: flex;
+    align-items: baseline;
+    gap: 0.5rem;
+    margin-bottom: 0.75rem;
+  }
+  .price-tag {
+    font-size: 2rem;
+    font-weight: 700;
+    color: var(--accent);
+  }
+  .price-period {
+    color: var(--text-muted);
+    font-weight: 600;
+  }
+  .premium-list {
+    margin: 1rem 0 1.5rem;
+    padding-left: 1.2rem;
+    color: var(--text-muted);
+  }
   .premium-desc {
     color: var(--text-muted);
     margin-bottom: 1.25rem;
     line-height: 1.5;
   }
   .btn-ia,
-  .btn-vudy {
+  .btn-cta {
     min-height: 52px;
     padding: 0.85rem 1.75rem;
   }
@@ -78,7 +118,7 @@ import Layout from '../layouts/Layout.astro';
   document.getElementById('btn-vudy')?.addEventListener('click', async () => {
     const resultEl = document.getElementById('vudy-result');
     if (!resultEl) return;
-    resultEl.textContent = 'Simulando solicitud a Vudy API...';
+    resultEl.textContent = 'Iniciando suscripción Premium...';
     resultEl.className = 'vudy-result loading';
 
     try {

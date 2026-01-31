@@ -1,2 +1,3 @@
-npm install astro postgres
+npm install astro
 npm install -D @types/node
+npm install mongodb

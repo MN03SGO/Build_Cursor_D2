@@ -1,24 +1,37 @@
 ---
 import Layout from '../layouts/Layout.astro';
-import MateriaCard from '../components/MateriaCard.astro';
 import PlanDia from '../components/PlanDia.astro';
 import AiStudyBox from '../components/AiStudyBox.astro';
-import { materiasMock, planDiaMock } from '../data/mock';
+import { planDiaMock } from '../data/mock';
 ---
 <Layout title="Dashboard - Asistente de Estudio">
   <h1>Dashboard</h1>
 
   <section class="materias-section">
-    <h2 class="section-title">Materias registradas</h2>
-    <div class="materias-grid">
-      {materiasMock.map((m) => (
-        <MateriaCard
-          nombre={m.nombre}
-          fechaExamen={m.fechaExamen}
-          prioridad={m.prioridad}
-        />
-      ))}
+    <div class="section-header">
+      <h2 class="section-title">Materias registradas</h2>
+      <button type="button" class="btn btn-outline" id="btn-new-subject">Nueva materia</button>
     </div>
+    <div class="materias-grid" id="subjects-grid"></div>
+    <p class="empty-state" id="subjects-empty">Aún no has registrado materias.</p>
+  </section>
+
+  <section class="calendar-section">
+    <div class="section-header">
+      <h2 class="section-title">Calendario</h2>
+      <div class="calendar-actions">
+        <div class="calendar-toggle">
+          <button type="button" class="btn btn-outline btn-icon" id="view-month">Mes</button>
+          <button type="button" class="btn btn-outline btn-icon" id="view-week">Semana</button>
+        </div>
+        <button type="button" class="btn btn-outline btn-icon" id="prev-month" aria-label="Mes anterior">◀</button>
+        <span class="calendar-title" id="calendar-title"></span>
+        <button type="button" class="btn btn-outline btn-icon" id="next-month" aria-label="Mes siguiente">▶</button>
+        <button type="button" class="btn btn-primary" id="btn-new-event">Nuevo evento</button>
+      </div>
+    </div>
+    <div class="calendar-grid" id="calendar-grid"></div>
+    <div class="calendar-week" id="calendar-week"></div>
   </section>
 
   <section class="plan-section">
@@ -28,16 +41,167 @@ import { materiasMock, planDiaMock } from '../data/mock';
   <section class="ai-section">
     <AiStudyBox />
   </section>
+
+  <div class="modal" id="subject-modal" aria-hidden="true">
+    <div class="modal-card">
+      <div class="modal-header">
+        <h3>Nueva materia</h3>
+        <button type="button" class="modal-close" data-close="subject-modal">✕</button>
+      </div>
+      <form id="subject-form" class="modal-form">
+        <input type="hidden" name="id" />
+        <label>
+          Nombre
+          <input type="text" name="name" required placeholder="Ej: Matemáticas" />
+        </label>
+        <label>
+          Fecha de examen
+          <input type="date" name="examDate" required />
+        </label>
+        <label>
+          Prioridad
+          <select name="priority">
+            <option value="alta">Alta</option>
+            <option value="media" selected>Media</option>
+            <option value="baja">Baja</option>
+          </select>
+        </label>
+        <label>
+          Color (opcional)
+          <input type="text" name="color" placeholder="Ej: #4a90d9" />
+        </label>
+        <button type="submit" class="btn btn-primary">Guardar materia</button>
+        <button type="button" class="btn btn-outline" id="subject-delete">Eliminar</button>
+        <p class="modal-status" id="subject-status"></p>
+      </form>
+    </div>
+  </div>
+
+  <div class="modal" id="event-modal" aria-hidden="true">
+    <div class="modal-card">
+      <div class="modal-header">
+        <h3>Nuevo evento</h3>
+        <button type="button" class="modal-close" data-close="event-modal">✕</button>
+      </div>
+      <form id="event-form" class="modal-form">
+        <input type="hidden" name="id" />
+        <label>
+          Título
+          <input type="text" name="title" required placeholder="Ej: Sesión de repaso" />
+        </label>
+        <label>
+          Fecha
+          <input type="date" name="date" required />
+        </label>
+        <label>
+          Nota (opcional)
+          <input type="text" name="note" placeholder="Ej: Capítulos 3 y 4" />
+        </label>
+        <button type="submit" class="btn btn-primary">Guardar evento</button>
+        <button type="button" class="btn btn-outline" id="event-delete">Eliminar</button>
+        <p class="modal-status" id="event-status"></p>
+      </form>
+    </div>
+  </div>
 </Layout>
 
 <style>
   .materias-section {
     margin-bottom: 2.5rem;
   }
+  .section-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 1rem;
+    flex-wrap: wrap;
+  }
   .materias-grid {
     display: grid;
     grid-template-columns: repeat(auto-fill, minmax(240px, 1fr));
     gap: 1.25rem;
+  }
+  .empty-state {
+    color: var(--text-muted);
+    margin-top: 1rem;
+    display: none;
+  }
+  .calendar-section {
+    margin-bottom: 2.5rem;
+  }
+  .calendar-actions {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    flex-wrap: wrap;
+  }
+  .calendar-toggle {
+    display: inline-flex;
+    gap: 0.4rem;
+    padding-right: 0.4rem;
+    border-right: 1px solid #ddd;
+  }
+  .calendar-title {
+    font-weight: 600;
+    min-width: 140px;
+    text-align: center;
+  }
+  .btn-icon {
+    padding: 0.4rem 0.75rem;
+    min-height: auto;
+  }
+  .calendar-grid {
+    margin-top: 1rem;
+    display: grid;
+    grid-template-columns: repeat(7, 1fr);
+    gap: 0.5rem;
+  }
+  .calendar-week {
+    margin-top: 1rem;
+    display: none;
+    gap: 0.75rem;
+  }
+  .calendar-week.open {
+    display: grid;
+  }
+  .week-day {
+    background: var(--card);
+    border-radius: 12px;
+    padding: 1rem;
+    box-shadow: var(--shadow);
+  }
+  .week-day h4 {
+    margin: 0 0 0.5rem;
+    font-size: 1rem;
+  }
+  .calendar-day {
+    background: var(--card);
+    border-radius: 10px;
+    padding: 0.5rem;
+    min-height: 110px;
+    box-shadow: var(--shadow);
+    display: grid;
+    grid-template-rows: auto 1fr;
+    gap: 0.35rem;
+  }
+  .calendar-day header {
+    font-weight: 600;
+    color: var(--text-muted);
+    font-size: 0.85rem;
+  }
+  .calendar-items {
+    display: grid;
+    gap: 0.35rem;
+    font-size: 0.82rem;
+  }
+  .calendar-item {
+    background: rgba(74, 144, 217, 0.12);
+    padding: 0.25rem 0.4rem;
+    border-radius: 6px;
+    cursor: pointer;
+  }
+  .calendar-item.event {
+    background: rgba(255, 183, 77, 0.2);
   }
   .plan-section {
     margin-top: 2rem;
@@ -45,4 +209,466 @@ import { materiasMock, planDiaMock } from '../data/mock';
   .ai-section {
     margin-top: 2rem;
   }
+  .modal {
+    position: fixed;
+    inset: 0;
+    background: rgba(0, 0, 0, 0.35);
+    display: none;
+    align-items: center;
+    justify-content: center;
+    padding: 1.5rem;
+    z-index: 40;
+  }
+  .modal.open {
+    display: flex;
+  }
+  .modal-card {
+    width: min(420px, 90vw);
+    background: var(--card);
+    border-radius: var(--radius);
+    box-shadow: var(--shadow-lg);
+    padding: 1.5rem;
+  }
+  .modal-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+  }
+  .modal-close {
+    border: none;
+    background: transparent;
+    font-size: 1.1rem;
+    cursor: pointer;
+  }
+  .modal-form {
+    display: grid;
+    gap: 0.75rem;
+    margin-top: 1rem;
+  }
+  .modal-form label {
+    display: grid;
+    gap: 0.35rem;
+    font-weight: 600;
+  }
+  .modal-form input,
+  .modal-form select {
+    padding: 0.65rem 0.75rem;
+    border-radius: 10px;
+    border: 1px solid #ddd;
+    font: inherit;
+  }
+  .modal-form button.btn-outline {
+    justify-self: start;
+  }
+  .modal-status {
+    margin: 0;
+    color: var(--text-muted);
+    min-height: 1.2rem;
+  }
 </style>
+
+<script>
+  const subjectsGrid = document.getElementById('subjects-grid');
+  const subjectsEmpty = document.getElementById('subjects-empty');
+  const calendarGrid = document.getElementById('calendar-grid');
+  const calendarWeek = document.getElementById('calendar-week');
+  const calendarTitle = document.getElementById('calendar-title');
+  const prevMonthBtn = document.getElementById('prev-month');
+  const nextMonthBtn = document.getElementById('next-month');
+  const viewMonthBtn = document.getElementById('view-month');
+  const viewWeekBtn = document.getElementById('view-week');
+  const newSubjectBtn = document.getElementById('btn-new-subject');
+  const newEventBtn = document.getElementById('btn-new-event');
+  const subjectModal = document.getElementById('subject-modal');
+  const eventModal = document.getElementById('event-modal');
+  const subjectForm = document.getElementById('subject-form');
+  const eventForm = document.getElementById('event-form');
+  const subjectStatus = document.getElementById('subject-status');
+  const eventStatus = document.getElementById('event-status');
+  const subjectDelete = document.getElementById('subject-delete');
+  const eventDelete = document.getElementById('event-delete');
+
+  const sessionRaw = localStorage.getItem('userSession');
+  const session = sessionRaw ? JSON.parse(sessionRaw) : null;
+  const userId = session?.id;
+
+  let subjects = [];
+  let events = [];
+  let currentDate = new Date();
+  let viewMode = 'month';
+
+  function openModal(modal) {
+    if (!modal) return;
+    modal.classList.add('open');
+  }
+  function closeModal(modal) {
+    if (!modal) return;
+    modal.classList.remove('open');
+  }
+
+  document.querySelectorAll('.modal-close').forEach((btn) => {
+    btn.addEventListener('click', () => {
+      const target = btn.getAttribute('data-close');
+      if (!target) return;
+      closeModal(document.getElementById(target));
+    });
+  });
+
+  newSubjectBtn?.addEventListener('click', () => openModal(subjectModal));
+  newEventBtn?.addEventListener('click', () => openModal(eventModal));
+
+  function formatDateKey(date) {
+    return date.toISOString().slice(0, 10);
+  }
+
+  function renderSubjects() {
+    if (!subjectsGrid || !subjectsEmpty) return;
+    subjectsGrid.innerHTML = '';
+    if (!subjects.length) {
+      subjectsEmpty.style.display = 'block';
+      return;
+    }
+    subjectsEmpty.style.display = 'none';
+    subjects.forEach((subject) => {
+      const card = document.createElement('div');
+      card.className = 'materia-card';
+      card.innerHTML = `
+        <div class="materia-card-header">
+          <h3 class="materia-nombre">${subject.name}</h3>
+          <span class="badge prioridad-${subject.priority}">${subject.priority}</span>
+        </div>
+        <p class="materia-fecha">📅 Examen: ${subject.exam_date || 'Sin fecha'}</p>
+      `;
+      subjectsGrid.appendChild(card);
+    });
+  }
+
+  function getItemsForDate(dateKey) {
+    const daySubjects = subjects.filter((s) => s.exam_date === dateKey).map((s) => ({
+      label: s.name,
+      type: 'subject'
+    }));
+    const dayEvents = events.filter((e) => e.date === dateKey).map((e) => ({
+      label: e.title,
+      type: 'event'
+    }));
+    return [...daySubjects, ...dayEvents];
+  }
+
+  function renderCalendar() {
+    if (!calendarGrid || !calendarTitle) return;
+    calendarGrid.innerHTML = '';
+    if (calendarWeek) {
+      calendarWeek.innerHTML = '';
+    }
+    const month = currentDate.getMonth();
+    const year = currentDate.getFullYear();
+    calendarTitle.textContent = new Date(year, month).toLocaleDateString('es-ES', {
+      month: 'long',
+      year: 'numeric'
+    });
+
+    const firstDay = new Date(year, month, 1);
+    const startDay = (firstDay.getDay() + 6) % 7;
+    const totalDays = new Date(year, month + 1, 0).getDate();
+
+    const weekdays = ['Lun', 'Mar', 'Mié', 'Jue', 'Vie', 'Sáb', 'Dom'];
+    weekdays.forEach((label) => {
+      const header = document.createElement('div');
+      header.className = 'calendar-day';
+      header.innerHTML = `<header>${label}</header>`;
+      calendarGrid.appendChild(header);
+    });
+
+    for (let i = 0; i < startDay; i++) {
+      const empty = document.createElement('div');
+      empty.className = 'calendar-day';
+      empty.innerHTML = '<header>&nbsp;</header>';
+      calendarGrid.appendChild(empty);
+    }
+
+    for (let day = 1; day <= totalDays; day++) {
+      const date = new Date(year, month, day);
+      const key = formatDateKey(date);
+      const items = getItemsForDate(key);
+      const cell = document.createElement('div');
+      cell.className = 'calendar-day';
+      const itemsHtml = items
+        .slice(0, 3)
+        .map(
+          (item) =>
+            `<div class="calendar-item ${item.type === 'event' ? 'event' : ''}" data-id="${item.id}" data-type="${item.type}">${item.label}</div>`
+        )
+        .join('');
+      const more = items.length > 3 ? `<div class="calendar-item">+${items.length - 3} más</div>` : '';
+      cell.innerHTML = `<header>${day}</header><div class="calendar-items">${itemsHtml}${more}</div>`;
+      calendarGrid.appendChild(cell);
+    }
+  }
+
+  function renderWeek() {
+    if (!calendarWeek || !calendarTitle) return;
+    calendarWeek.innerHTML = '';
+    const date = new Date(currentDate);
+    const day = (date.getDay() + 6) % 7;
+    date.setDate(date.getDate() - day);
+    const weekStart = new Date(date);
+    const weekEnd = new Date(date);
+    weekEnd.setDate(weekEnd.getDate() + 6);
+    calendarTitle.textContent = `${weekStart.toLocaleDateString('es-ES')} - ${weekEnd.toLocaleDateString('es-ES')}`;
+
+    for (let i = 0; i < 7; i++) {
+      const current = new Date(weekStart);
+      current.setDate(weekStart.getDate() + i);
+      const key = formatDateKey(current);
+      const items = getItemsForDate(key);
+      const dayBox = document.createElement('div');
+      dayBox.className = 'week-day';
+      const itemsHtml = items
+        .map(
+          (item) =>
+            `<div class="calendar-item ${item.type === 'event' ? 'event' : ''}" data-id="${item.id}" data-type="${item.type}">${item.label}</div>`
+        )
+        .join('');
+      dayBox.innerHTML = `
+        <h4>${current.toLocaleDateString('es-ES', { weekday: 'long', day: 'numeric' })}</h4>
+        <div class="calendar-items">${itemsHtml || '<span class="empty-state">Sin eventos</span>'}</div>
+      `;
+      calendarWeek.appendChild(dayBox);
+    }
+  }
+
+  async function loadData() {
+    if (!userId) {
+      if (subjectsEmpty) {
+        subjectsEmpty.style.display = 'block';
+        subjectsEmpty.textContent = 'Inicia sesión para ver tus materias.';
+      }
+      return;
+    }
+
+    const [subjectsRes, eventsRes] = await Promise.all([
+      fetch(`/api/subjects?userId=${userId}`),
+      fetch(`/api/events?userId=${userId}`)
+    ]);
+    subjects = subjectsRes.ok ? await subjectsRes.json() : [];
+    events = eventsRes.ok ? await eventsRes.json() : [];
+    renderSubjects();
+    if (viewMode === 'month') renderCalendar();
+    if (viewMode === 'week') renderWeek();
+  }
+
+  prevMonthBtn?.addEventListener('click', () => {
+    if (viewMode === 'month') {
+      currentDate = new Date(currentDate.getFullYear(), currentDate.getMonth() - 1, 1);
+      renderCalendar();
+    } else {
+      currentDate = new Date(currentDate.getFullYear(), currentDate.getMonth(), currentDate.getDate() - 7);
+      renderWeek();
+    }
+  });
+  nextMonthBtn?.addEventListener('click', () => {
+    if (viewMode === 'month') {
+      currentDate = new Date(currentDate.getFullYear(), currentDate.getMonth() + 1, 1);
+      renderCalendar();
+    } else {
+      currentDate = new Date(currentDate.getFullYear(), currentDate.getMonth(), currentDate.getDate() + 7);
+      renderWeek();
+    }
+  });
+
+  viewMonthBtn?.addEventListener('click', () => {
+    viewMode = 'month';
+    if (calendarGrid) calendarGrid.style.display = 'grid';
+    if (calendarWeek) calendarWeek.classList.remove('open');
+    renderCalendar();
+  });
+  viewWeekBtn?.addEventListener('click', () => {
+    viewMode = 'week';
+    if (calendarGrid) calendarGrid.style.display = 'none';
+    if (calendarWeek) calendarWeek.classList.add('open');
+    renderWeek();
+  });
+
+  subjectForm?.addEventListener('submit', async (e) => {
+    e.preventDefault();
+    if (!userId || !subjectForm || !subjectStatus) return;
+    const form = subjectForm;
+    const formData = new FormData(form);
+    subjectStatus.textContent = 'Guardando materia...';
+
+    const payload = {
+      id: String(formData.get('id') || ''),
+      userId,
+      name: String(formData.get('name') || ''),
+      examDate: String(formData.get('examDate') || ''),
+      priority: String(formData.get('priority') || 'media'),
+      color: String(formData.get('color') || '')
+    };
+
+    try {
+      const isEdit = Boolean(payload.id);
+      const res = await fetch('/api/subjects', {
+        method: isEdit ? 'PUT' : 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(payload)
+      });
+      if (!res.ok) throw new Error(await res.text());
+      const data = await res.json();
+      if (isEdit) {
+        subjects = subjects.map((s) => (s.id === data.id ? data : s));
+      } else {
+        subjects.unshift(data);
+      }
+      renderSubjects();
+      if (viewMode === 'month') renderCalendar();
+      if (viewMode === 'week') renderWeek();
+      subjectStatus.textContent = 'Materia guardada.';
+      form.reset();
+      closeModal(subjectModal);
+    } catch (err) {
+      subjectStatus.textContent = err?.message || 'No se pudo guardar.';
+    }
+  });
+
+  subjectDelete?.addEventListener('click', async () => {
+    if (!userId || !subjectForm || !subjectStatus) return;
+    const formData = new FormData(subjectForm);
+    const id = String(formData.get('id') || '');
+    if (!id) return;
+    subjectStatus.textContent = 'Eliminando materia...';
+    try {
+      const res = await fetch('/api/subjects', {
+        method: 'DELETE',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ id, userId })
+      });
+      if (!res.ok) throw new Error(await res.text());
+      subjects = subjects.filter((s) => s.id !== id);
+      renderSubjects();
+      if (viewMode === 'month') renderCalendar();
+      if (viewMode === 'week') renderWeek();
+      subjectStatus.textContent = 'Materia eliminada.';
+      subjectForm.reset();
+      closeModal(subjectModal);
+    } catch (err) {
+      subjectStatus.textContent = err?.message || 'No se pudo eliminar.';
+    }
+  });
+
+  eventForm?.addEventListener('submit', async (e) => {
+    e.preventDefault();
+    if (!userId || !eventForm || !eventStatus) return;
+    const form = eventForm;
+    const formData = new FormData(form);
+    eventStatus.textContent = 'Guardando evento...';
+
+    const payload = {
+      id: String(formData.get('id') || ''),
+      userId,
+      title: String(formData.get('title') || ''),
+      date: String(formData.get('date') || ''),
+      note: String(formData.get('note') || '')
+    };
+
+    try {
+      const isEdit = Boolean(payload.id);
+      const res = await fetch('/api/events', {
+        method: isEdit ? 'PUT' : 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(payload)
+      });
+      if (!res.ok) throw new Error(await res.text());
+      const data = await res.json();
+      if (isEdit) {
+        events = events.map((ev) => (ev.id === data.id ? data : ev));
+      } else {
+        events.unshift(data);
+      }
+      if (viewMode === 'month') renderCalendar();
+      if (viewMode === 'week') renderWeek();
+      eventStatus.textContent = 'Evento guardado.';
+      form.reset();
+      closeModal(eventModal);
+    } catch (err) {
+      eventStatus.textContent = err?.message || 'No se pudo guardar.';
+    }
+  });
+
+  eventDelete?.addEventListener('click', async () => {
+    if (!userId || !eventForm || !eventStatus) return;
+    const formData = new FormData(eventForm);
+    const id = String(formData.get('id') || '');
+    if (!id) return;
+    eventStatus.textContent = 'Eliminando evento...';
+    try {
+      const res = await fetch('/api/events', {
+        method: 'DELETE',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ id, userId })
+      });
+      if (!res.ok) throw new Error(await res.text());
+      events = events.filter((ev) => ev.id !== id);
+      if (viewMode === 'month') renderCalendar();
+      if (viewMode === 'week') renderWeek();
+      eventStatus.textContent = 'Evento eliminado.';
+      eventForm.reset();
+      closeModal(eventModal);
+    } catch (err) {
+      eventStatus.textContent = err?.message || 'No se pudo eliminar.';
+    }
+  });
+
+  function openSubjectModal(subject) {
+    if (!subjectForm) return;
+    (subjectForm.querySelector('[name="id"]')).value = subject?.id || '';
+    (subjectForm.querySelector('[name="name"]')).value = subject?.name || '';
+    (subjectForm.querySelector('[name="examDate"]')).value = subject?.exam_date || '';
+    (subjectForm.querySelector('[name="priority"]')).value = subject?.priority || 'media';
+    (subjectForm.querySelector('[name="color"]')).value = subject?.color || '';
+    openModal(subjectModal);
+  }
+
+  function openEventModal(event) {
+    if (!eventForm) return;
+    (eventForm.querySelector('[name="id"]')).value = event?.id || '';
+    (eventForm.querySelector('[name="title"]')).value = event?.title || '';
+    (eventForm.querySelector('[name="date"]')).value = event?.date || '';
+    (eventForm.querySelector('[name="note"]')).value = event?.note || '';
+    openModal(eventModal);
+  }
+
+  subjectsGrid?.addEventListener('click', (e) => {
+    const target = e.target;
+    if (!(target instanceof HTMLElement)) return;
+    const card = target.closest('.materia-card');
+    if (!card) return;
+    const name = card.querySelector('.materia-nombre')?.textContent || '';
+    const subject = subjects.find((s) => s.name === name);
+    if (subject) openSubjectModal(subject);
+  });
+
+  function handleCalendarClick(e) {
+    const target = e.target;
+    if (!(target instanceof HTMLElement)) return;
+    const item = target.closest('.calendar-item');
+    if (!item) return;
+    const id = item.getAttribute('data-id');
+    const type = item.getAttribute('data-type');
+    if (!id || !type) return;
+    if (type === 'subject') {
+      const subject = subjects.find((s) => s.id === id);
+      if (subject) openSubjectModal(subject);
+    }
+    if (type === 'event') {
+      const event = events.find((ev) => ev.id === id);
+      if (event) openEventModal(event);
+    }
+  }
+
+  calendarGrid?.addEventListener('click', handleCalendarClick);
+  calendarWeek?.addEventListener('click', handleCalendarClick);
+
+  renderCalendar();
+  loadData();
+</script>
