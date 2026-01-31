@@ -6,6 +6,7 @@ import { materiasMock, planDiaMock } from '../data/mock';
 ---
 <Layout title="Dashboard - Asistente de Estudio">
   <h1>Dashboard</h1>
+  <p class="dashboard-intro">Materias registradas y plan de estudio del día. Marca las tareas cuando las completes.</p>
 
   <section class="materias-section">
     <h2 class="section-title">Materias registradas</h2>
@@ -36,5 +37,10 @@ import { materiasMock, planDiaMock } from '../data/mock';
   }
   .plan-section {
     margin-top: 2rem;
+  }
+  .dashboard-intro {
+    color: var(--text-muted);
+    margin-bottom: 1.5rem;
+    font-size: 1.05rem;
   }
 </style>

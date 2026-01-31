@@ -16,6 +16,8 @@ import Layout from '../layouts/Layout.astro';
     <button type="button" class="btn btn-outline btn-vudy" id="btn-vudy">Solicitar pago (Vudy)</button>
     <div id="vudy-result" class="vudy-result" aria-live="polite"></div>
   </section>
+
+  <p class="premium-link"><a href="/" class="link-dashboard">← Volver al Dashboard</a></p>
 </Layout>
 
 <style>
@@ -55,11 +57,20 @@ import Layout from '../layouts/Layout.astro';
     background: #ffebee;
     color: #c62828;
   }
+  .premium-link {
+    margin-top: 2rem;
+  }
+  .link-dashboard {
+    color: var(--accent);
+    font-weight: 600;
+    text-decoration: none;
+  }
+  .link-dashboard:hover {
+    text-decoration: underline;
+  }
 </style>
 
 <script>
-  import { simulateVudyPayment } from '../lib/vudy';
-
   document.getElementById('btn-ia')?.addEventListener('click', () => {
     alert('En el producto final, aquí se abriría la función de explicación con IA.');
   });
@@ -71,11 +82,12 @@ import Layout from '../layouts/Layout.astro';
     resultEl.className = 'vudy-result loading';
 
     try {
-      const result = await simulateVudyPayment();
-      resultEl.textContent = result.success ? result.message : result.message;
-      resultEl.className = 'vudy-result ' + (result.success ? 'success' : 'error');
+      const res = await fetch('/api/premium/vudy-simulate');
+      const data = await res.json();
+      resultEl.textContent = data.message || (data.success ? 'Solicitud simulada correctamente.' : 'Error.');
+      resultEl.className = data.success ? 'vudy-result success' : 'vudy-result error';
     } catch {
-      resultEl.textContent = 'Error simulado al conectar con Vudy.';
+      resultEl.textContent = 'Error al conectar con la simulación de Vudy.';
       resultEl.className = 'vudy-result error';
     }
   });

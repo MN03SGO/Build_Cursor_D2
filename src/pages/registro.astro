@@ -25,6 +25,7 @@ import Layout from '../layouts/Layout.astro';
   </form>
 
   <p class="form-note">En este prototipo el formulario muestra un mensaje de confirmación. Los datos no se guardan.</p>
+  <p class="form-link"><a href="/" class="link-dashboard">← Volver al Dashboard</a></p>
 </Layout>
 
 <style>
@@ -43,6 +44,17 @@ import Layout from '../layouts/Layout.astro';
     margin-top: 1.5rem;
     color: var(--text-muted);
     font-size: 0.9rem;
+  }
+  .form-link {
+    margin-top: 1rem;
+  }
+  .link-dashboard {
+    color: var(--accent);
+    font-weight: 600;
+    text-decoration: none;
+  }
+  .link-dashboard:hover {
+    text-decoration: underline;
   }
 </style>
 
