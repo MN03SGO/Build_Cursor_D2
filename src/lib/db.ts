@@ -3,7 +3,7 @@ import postgres from 'postgres';
 
 const connectionString = process.env.DATABASE_URL;
 
-if (!connectionString) {
+if (!connectionString || !connectionString.trim()) {
   throw new Error("DATABASE_URL no está definida en el archivo .env");
 }
 
