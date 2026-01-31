@@ -37,10 +37,10 @@ const { title = 'Asistente de Estudio' } = Astro.props;
     <main class="main">
       <slot />
     </main>
-    <button type="button" class="chat-fab" id="chat-fab" aria-label="Abrir chat IA">
+    <button type="button" class="chat-fab" id="chat-fab" aria-label="Abrir chat IA" data-auth="user">
       💬
     </button>
-    <section class="chat-panel" id="chat-panel" aria-live="polite">
+    <section class="chat-panel" id="chat-panel" aria-live="polite" data-auth="user">
       <header class="chat-header">
         <h3>Chat IA</h3>
         <button type="button" class="chat-close" id="chat-close" aria-label="Cerrar chat">✕</button>
@@ -96,7 +96,21 @@ const { title = 'Asistente de Estudio' } = Astro.props;
     (el as HTMLElement).style.display = isLoggedIn ? 'none' : 'inline-flex';
   });
   document.querySelectorAll('[data-auth="user"]').forEach((el) => {
-    (el as HTMLElement).style.display = isLoggedIn ? 'inline-flex' : 'none';
+    const element = el as HTMLElement;
+    if (!isLoggedIn) {
+      element.style.display = 'none';
+      return;
+    }
+    if (element.classList.contains('chat-panel')) {
+      element.style.display = 'flex';
+      element.classList.remove('open');
+      return;
+    }
+    if (element.classList.contains('chat-fab')) {
+      element.style.display = 'block';
+      return;
+    }
+    element.style.display = 'inline-flex';
   });
   if (userPill && session?.nombre) {
     userPill.textContent = `Hola, ${session.nombre}`;
