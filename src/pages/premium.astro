@@ -1,0 +1,82 @@
+---
+import Layout from '../layouts/Layout.astro';
+---
+<Layout title="Funciones Premium - Asistente de Estudio">
+  <h1>Funciones Premium</h1>
+
+  <section class="premium-card">
+    <h2 class="section-title">Explicación con IA</h2>
+    <p class="premium-desc">Obtén explicaciones personalizadas de tus temas de estudio usando inteligencia artificial.</p>
+    <button type="button" class="btn btn-primary btn-ia" id="btn-ia">Usar explicación de IA</button>
+  </section>
+
+  <section class="premium-card vudy-section">
+    <h2 class="section-title">Pago con Vudy (simulación)</h2>
+    <p class="premium-desc">Simulación de solicitud de pago usando Vudy API. No se realiza ningún cargo real.</p>
+    <button type="button" class="btn btn-outline btn-vudy" id="btn-vudy">Solicitar pago (Vudy)</button>
+    <div id="vudy-result" class="vudy-result" aria-live="polite"></div>
+  </section>
+</Layout>
+
+<style>
+  .premium-card {
+    background: var(--card);
+    padding: 2rem;
+    border-radius: var(--radius);
+    box-shadow: var(--shadow);
+    margin-bottom: 2rem;
+  }
+  .premium-desc {
+    color: var(--text-muted);
+    margin-bottom: 1.25rem;
+    line-height: 1.5;
+  }
+  .btn-ia,
+  .btn-vudy {
+    min-height: 52px;
+    padding: 0.85rem 1.75rem;
+  }
+  .vudy-result {
+    margin-top: 1rem;
+    padding: 1rem;
+    border-radius: 8px;
+    font-size: 0.95rem;
+    min-height: 2.5rem;
+  }
+  .vudy-result.success {
+    background: #e8f5e9;
+    color: #2e7d32;
+  }
+  .vudy-result.loading {
+    background: #e3f2fd;
+    color: #1565c0;
+  }
+  .vudy-result.error {
+    background: #ffebee;
+    color: #c62828;
+  }
+</style>
+
+<script>
+  import { simulateVudyPayment } from '../lib/vudy';
+
+  document.getElementById('btn-ia')?.addEventListener('click', () => {
+    alert('En el producto final, aquí se abriría la función de explicación con IA.');
+  });
+
+  document.getElementById('btn-vudy')?.addEventListener('click', async () => {
+    const resultEl = document.getElementById('vudy-result');
+    if (!resultEl) return;
+    resultEl.textContent = 'Simulando solicitud a Vudy API...';
+    resultEl.className = 'vudy-result loading';
+
+    try {
+      const result = await simulateVudyPayment();
+      resultEl.textContent = result.success ? result.message : result.message;
+      resultEl.className = 'vudy-result ' + (result.success ? 'success' : 'error');
+    } catch {
+      resultEl.textContent = 'Error simulado al conectar con Vudy.';
+      resultEl.className = 'vudy-result error';
+    }
+  });
+</script>

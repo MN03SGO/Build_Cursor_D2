@@ -1,0 +1,89 @@
+---
+interface Tarea {
+  id: string;
+  hora: string;
+  materia: string;
+  completada: boolean;
+}
+interface Props {
+  tareas: Tarea[];
+}
+const { tareas } = Astro.props;
+---
+<section class="plan-dia">
+  <h2 class="section-title">Plan de estudio del día</h2>
+  <ul class="tareas-list">
+    {tareas.map((t) => (
+      <li class={`tarea-item ${t.completada ? 'completada' : ''}`} data-id={t.id}>
+        <div class="tarea-info">
+          <span class="tarea-hora">{t.hora}</span>
+          <span class="tarea-materia">{t.materia}</span>
+        </div>
+        <button type="button" class="btn btn-success btn-completar" data-id={t.id} aria-label="Marcar como completada">
+          {t.completada ? '✓ Hecho' : 'Completar'}
+        </button>
+      </li>
+    ))}
+  </ul>
+</section>
+
+<style>
+  .plan-dia {
+    background: var(--card);
+    padding: 1.5rem;
+    border-radius: var(--radius);
+    box-shadow: var(--shadow);
+  }
+  .tareas-list {
+    list-style: none;
+    margin: 0;
+    padding: 0;
+  }
+  .tarea-item {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 1rem;
+    padding: 1rem;
+    border-bottom: 1px solid #eee;
+    flex-wrap: wrap;
+  }
+  .tarea-item:last-child {
+    border-bottom: none;
+  }
+  .tarea-item.completada .tarea-materia {
+    text-decoration: line-through;
+    color: var(--text-muted);
+  }
+  .tarea-item.completada .btn-completar {
+    opacity: 0.8;
+  }
+  .tarea-info {
+    display: flex;
+    flex-direction: column;
+    gap: 0.2rem;
+  }
+  .tarea-hora {
+    font-weight: 600;
+    color: var(--accent);
+    font-size: 0.95rem;
+  }
+  .tarea-materia {
+    font-size: 1.05rem;
+    color: var(--text);
+  }
+  .btn-completar {
+    min-width: 120px;
+  }
+</style>
+
+<script>
+  document.querySelectorAll('.btn-completar').forEach((btn) => {
+    btn.addEventListener('click', () => {
+      const item = btn.closest('.tarea-item');
+      if (!item) return;
+      item.classList.toggle('completada');
+      btn.textContent = item.classList.contains('completada') ? '✓ Hecho' : 'Completar';
+    });
+  });
+</script>

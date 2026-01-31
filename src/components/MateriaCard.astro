@@ -1,0 +1,66 @@
+---
+interface Props {
+  nombre: string;
+  fechaExamen: string;
+  prioridad: 'alta' | 'media' | 'baja';
+}
+const { nombre, fechaExamen, prioridad } = Astro.props;
+const prioridadClass = prioridad === 'alta' ? 'prioridad-alta' : prioridad === 'media' ? 'prioridad-media' : 'prioridad-baja';
+---
+<div class="materia-card">
+  <div class="materia-card-header">
+    <h3 class="materia-nombre">{nombre}</h3>
+    <span class={`badge ${prioridadClass}`}>{prioridad}</span>
+  </div>
+  <p class="materia-fecha">📅 Examen: {fechaExamen}</p>
+</div>
+
+<style>
+  .materia-card {
+    background: var(--card);
+    padding: 1.25rem;
+    border-radius: var(--radius);
+    box-shadow: var(--shadow);
+    transition: transform 0.2s;
+  }
+  .materia-card:hover {
+    transform: translateY(-2px);
+  }
+  .materia-card-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 0.75rem;
+    margin-bottom: 0.5rem;
+  }
+  .materia-nombre {
+    margin: 0;
+    font-size: 1.15rem;
+    font-weight: 600;
+    color: var(--text);
+  }
+  .badge {
+    padding: 0.25rem 0.6rem;
+    border-radius: 20px;
+    font-size: 0.8rem;
+    font-weight: 600;
+    text-transform: capitalize;
+  }
+  .prioridad-alta {
+    background: var(--priority-alta);
+    color: white;
+  }
+  .prioridad-media {
+    background: var(--priority-media);
+    color: #333;
+  }
+  .prioridad-baja {
+    background: var(--priority-baja);
+    color: #333;
+  }
+  .materia-fecha {
+    margin: 0;
+    color: var(--text-muted);
+    font-size: 0.95rem;
+  }
+</style>

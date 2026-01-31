@@ -1,0 +1,31 @@
+---
+import '../styles/global.css';
+interface Props {
+  title?: string;
+}
+const { title = 'Asistente de Estudio' } = Astro.props;
+---
+<!DOCTYPE html>
+<html lang="es">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>{title}</title>
+  </head>
+  <body>
+    <header class="header">
+      <a href="/" class="header-title">📚 Asistente de Estudio</a>
+      <nav class="nav">
+        <a href="/">Dashboard</a>
+        <a href="/registro">Registrar materia</a>
+        <a href="/premium">Premium</a>
+      </nav>
+    </header>
+    <main class="main">
+      <slot />
+    </main>
+    <footer class="footer">
+      <p>Hackatón 2025 — Asistente de Estudio</p>
+    </footer>
+  </body>
+</html>
