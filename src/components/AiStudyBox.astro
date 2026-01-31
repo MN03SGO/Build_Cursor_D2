@@ -1,0 +1,151 @@
+---
+import { defaultStudyParams } from '../lib/ai-params';
+---
+<section class="ai-box">
+  <div class="ai-box-header">
+    <h2 class="section-title">Plan de estudio con IA</h2>
+    <p class="ai-subtitle">Genera un plan personalizado en segundos.</p>
+  </div>
+
+  <form class="ai-form" id="ai-study-form">
+    <label class="field">
+      <span>Tema *</span>
+      <input type="text" name="topic" placeholder="Ej: Álgebra lineal" required />
+    </label>
+
+    <label class="field">
+      <span>Nivel</span>
+      <select name="level">
+        <option value="principiante" selected={defaultStudyParams.level === 'principiante'}>
+          Principiante
+        </option>
+        <option value="intermedio" selected={defaultStudyParams.level === 'intermedio'}>
+          Intermedio
+        </option>
+        <option value="avanzado" selected={defaultStudyParams.level === 'avanzado'}>
+          Avanzado
+        </option>
+      </select>
+    </label>
+
+    <label class="field">
+      <span>Objetivos</span>
+      <textarea name="goals" rows="3">{defaultStudyParams.goals}</textarea>
+    </label>
+
+    <div class="field-row">
+      <label class="field">
+        <span>Semanas</span>
+        <input type="number" name="weeks" min="1" value={defaultStudyParams.weeks} />
+      </label>
+      <label class="field">
+        <span>Horas por semana</span>
+        <input type="number" name="hoursPerWeek" min="1" value={defaultStudyParams.hoursPerWeek} />
+      </label>
+    </div>
+
+    <button type="submit" class="btn btn-primary">Generar plan</button>
+    <p class="ai-status" id="ai-status" aria-live="polite"></p>
+  </form>
+
+  <article class="ai-result" id="ai-result" aria-live="polite"></article>
+</section>
+
+<style>
+  .ai-box {
+    background: var(--card);
+    padding: 1.5rem;
+    border-radius: var(--radius);
+    box-shadow: var(--shadow);
+    display: grid;
+    gap: 1.25rem;
+  }
+  .ai-box-header {
+    display: grid;
+    gap: 0.35rem;
+  }
+  .ai-subtitle {
+    margin: 0;
+    color: var(--text-muted);
+  }
+  .ai-form {
+    display: grid;
+    gap: 1rem;
+  }
+  .field {
+    display: grid;
+    gap: 0.4rem;
+    font-weight: 600;
+  }
+  .field input,
+  .field select,
+  .field textarea {
+    width: 100%;
+    padding: 0.65rem 0.75rem;
+    border-radius: 10px;
+    border: 1px solid #ddd;
+    font: inherit;
+  }
+  .field-row {
+    display: grid;
+    gap: 1rem;
+    grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
+  }
+  .ai-status {
+    min-height: 1.2rem;
+    color: var(--text-muted);
+    margin: 0;
+  }
+  .ai-result {
+    white-space: pre-wrap;
+    background: #f8f9fb;
+    padding: 1rem;
+    border-radius: 12px;
+    border: 1px solid #eee;
+    min-height: 120px;
+  }
+</style>
+
+<script>
+  const form = document.getElementById('ai-study-form');
+  const statusEl = document.getElementById('ai-status');
+  const resultEl = document.getElementById('ai-result');
+
+  form?.addEventListener('submit', async (event) => {
+    event.preventDefault();
+    if (!(form instanceof HTMLFormElement) || !statusEl || !resultEl) return;
+
+    statusEl.textContent = 'Generando plan...';
+    resultEl.textContent = '';
+
+    const formData = new FormData(form);
+    const payload = {
+      topic: String(formData.get('topic') || ''),
+      level: String(formData.get('level') || 'principiante'),
+      goals: String(formData.get('goals') || ''),
+      weeks: Number(formData.get('weeks') || 4),
+      hoursPerWeek: Number(formData.get('hoursPerWeek') || 4)
+    };
+
+    try {
+      const response = await fetch('/api/ai/study', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(payload)
+      });
+
+      if (!response.ok) {
+        const errorText = await response.text();
+        throw new Error(errorText || 'Error al generar el plan');
+      }
+
+      const data = await response.json();
+      resultEl.textContent = data.plan || 'No se recibió contenido.';
+      statusEl.textContent = 'Plan generado.';
+    } catch (error) {
+      statusEl.textContent = 'No se pudo generar el plan.';
+      resultEl.textContent =
+        error instanceof Error ? error.message : 'Error inesperado';
+    }
+  });
+</script>

@@ -2,6 +2,7 @@
 import Layout from '../layouts/Layout.astro';
 import MateriaCard from '../components/MateriaCard.astro';
 import PlanDia from '../components/PlanDia.astro';
+import AiStudyBox from '../components/AiStudyBox.astro';
 import { materiasMock, planDiaMock } from '../data/mock';
 ---
 <Layout title="Dashboard - Asistente de Estudio">
@@ -23,6 +24,10 @@ import { materiasMock, planDiaMock } from '../data/mock';
   <section class="plan-section">
     <PlanDia tareas={planDiaMock} />
   </section>
+
+  <section class="ai-section">
+    <AiStudyBox />
+  </section>
 </Layout>
 
 <style>
@@ -35,6 +40,9 @@ import { materiasMock, planDiaMock } from '../data/mock';
     gap: 1.25rem;
   }
   .plan-section {
+    margin-top: 2rem;
+  }
+  .ai-section {
     margin-top: 2rem;
   }
 </style>
