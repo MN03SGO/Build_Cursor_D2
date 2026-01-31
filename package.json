@@ -7,5 +7,12 @@
     "dev": "astro dev",
     "build": "astro build",
     "preview": "astro preview"
+  },
+  "dependencies": {
+    "astro": "^5.17.1",
+    "postgres": "^3.4.8"
+  },
+  "devDependencies": {
+    "@types/node": "^25.1.0"
   }
 }

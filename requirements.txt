@@ -1,0 +1,2 @@
+npm install astro postgres
+npm install -D @types/node
