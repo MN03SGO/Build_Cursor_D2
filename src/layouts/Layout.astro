@@ -37,20 +37,22 @@ const { title = 'Asistente de Estudio' } = Astro.props;
     <main class="main">
       <slot />
     </main>
-    <button type="button" class="chat-fab" id="chat-fab" aria-label="Abrir chat IA" data-auth="user">
-      💬
-    </button>
-    <section class="chat-panel" id="chat-panel" aria-live="polite" data-auth="user">
-      <header class="chat-header">
-        <h3>Chat IA</h3>
-        <button type="button" class="chat-close" id="chat-close" aria-label="Cerrar chat">✕</button>
-      </header>
-      <div class="chat-messages" id="chat-messages"></div>
-      <form class="chat-form" id="chat-form">
-        <input type="text" id="chat-input" placeholder="Escribe tu pregunta..." required />
-        <button type="submit" class="btn btn-primary">Enviar</button>
-      </form>
-    </section>
+    <div class="chat-float-wrap" id="chat-float-wrap" data-auth="user">
+      <button type="button" class="chat-fab" id="chat-fab" aria-label="Abrir chat IA">
+        💬
+      </button>
+      <section class="chat-panel" id="chat-panel" aria-live="polite">
+        <header class="chat-header">
+          <h3>Chat IA</h3>
+          <button type="button" class="chat-close" id="chat-close" aria-label="Cerrar chat">✕</button>
+        </header>
+        <div class="chat-messages" id="chat-messages"></div>
+        <form class="chat-form" id="chat-form">
+          <input type="text" id="chat-input" placeholder="Escribe tu pregunta..." required />
+          <button type="submit" class="btn btn-primary">Enviar</button>
+        </form>
+      </section>
+    </div>
     <footer class="footer">
       <p>Cursor hackatón 2026 — Powered by WONDER</p>
     </footer>
@@ -101,12 +103,7 @@ const { title = 'Asistente de Estudio' } = Astro.props;
       element.style.display = 'none';
       return;
     }
-    if (element.classList.contains('chat-panel')) {
-      element.style.display = 'flex';
-      element.classList.remove('open');
-      return;
-    }
-    if (element.classList.contains('chat-fab')) {
+    if (element.classList.contains('chat-float-wrap')) {
       element.style.display = 'block';
       return;
     }
@@ -139,11 +136,21 @@ const { title = 'Asistente de Estudio' } = Astro.props;
     chatMessages.scrollTop = chatMessages.scrollHeight;
   }
 
-  chatFab?.addEventListener('click', () => {
+  const chatWrap = document.getElementById('chat-float-wrap');
+  // Desplegar al acercar el mouse (hover)
+  chatWrap?.addEventListener('mouseenter', () => {
     chatPanel?.classList.add('open');
     chatInput?.focus();
   });
-
+  chatWrap?.addEventListener('mouseleave', () => {
+    chatPanel?.classList.remove('open');
+  });
+  // Click en FAB también abre (móvil / accesibilidad)
+  chatFab?.addEventListener('click', (e) => {
+    e.stopPropagation();
+    chatPanel?.classList.toggle('open');
+    if (chatPanel?.classList.contains('open')) chatInput?.focus();
+  });
   chatClose?.addEventListener('click', () => {
     chatPanel?.classList.remove('open');
   });
@@ -198,10 +205,17 @@ const { title = 'Asistente de Estudio' } = Astro.props;
     font-weight: 600;
     font-size: 0.85rem;
   }
-  .chat-fab {
+  .chat-float-wrap {
     position: fixed;
     right: 1.5rem;
     bottom: 1.5rem;
+    z-index: 30;
+    display: flex;
+    flex-direction: column;
+    align-items: flex-end;
+    gap: 0.5rem;
+  }
+  .chat-fab {
     width: 56px;
     height: 56px;
     border-radius: 50%;
@@ -211,12 +225,12 @@ const { title = 'Asistente de Estudio' } = Astro.props;
     cursor: pointer;
     font-size: 1.35rem;
     box-shadow: var(--shadow-lg);
-    z-index: 30;
+    flex-shrink: 0;
+  }
+  .chat-fab:hover {
+    background: var(--accent-hover);
   }
   .chat-panel {
-    position: fixed;
-    right: 1.5rem;
-    bottom: 5.5rem;
     width: min(360px, 90vw);
     background: var(--card);
     border-radius: var(--radius);
@@ -224,10 +238,16 @@ const { title = 'Asistente de Estudio' } = Astro.props;
     display: none;
     flex-direction: column;
     overflow: hidden;
-    z-index: 30;
+    max-height: 0;
+    opacity: 0;
+    pointer-events: none;
+    transition: max-height 0.2s ease, opacity 0.2s ease;
   }
   .chat-panel.open {
     display: flex;
+    max-height: 90vh;
+    opacity: 1;
+    pointer-events: auto;
   }
   .chat-header {
     display: flex;

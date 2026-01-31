@@ -126,6 +126,20 @@ import { planDiaMock } from '../data/mock';
     margin-top: 1rem;
     display: none;
   }
+  .materia-card-actions {
+    margin-top: 0.75rem;
+    padding-top: 0.75rem;
+    border-top: 1px solid #eee;
+  }
+  .btn-delete-materia {
+    padding: 0.4rem 0.75rem;
+    font-size: 0.85rem;
+    color: var(--priority-alta);
+    border-color: rgba(229, 115, 115, 0.5);
+  }
+  .btn-delete-materia:hover {
+    background: rgba(229, 115, 115, 0.1);
+  }
   .calendar-section {
     margin-bottom: 2.5rem;
   }
@@ -332,12 +346,16 @@ import { planDiaMock } from '../data/mock';
     subjects.forEach((subject) => {
       const card = document.createElement('div');
       card.className = 'materia-card';
+      card.dataset.id = subject.id;
       card.innerHTML = `
         <div class="materia-card-header">
           <h3 class="materia-nombre">${subject.name}</h3>
           <span class="badge prioridad-${subject.priority}">${subject.priority}</span>
         </div>
         <p class="materia-fecha">📅 Examen: ${subject.exam_date || 'Sin fecha'}</p>
+        <div class="materia-card-actions">
+          <button type="button" class="btn btn-outline btn-sm btn-delete-materia" data-id="${subject.id}" aria-label="Eliminar materia">Eliminar</button>
+        </div>
       `;
       subjectsGrid.appendChild(card);
     });
@@ -345,10 +363,12 @@ import { planDiaMock } from '../data/mock';
 
   function getItemsForDate(dateKey) {
     const daySubjects = subjects.filter((s) => s.exam_date === dateKey).map((s) => ({
+      id: s.id,
       label: s.name,
       type: 'subject'
     }));
     const dayEvents = events.filter((e) => e.date === dateKey).map((e) => ({
+      id: e.id,
       label: e.title,
       type: 'event'
     }));
@@ -641,11 +661,36 @@ import { planDiaMock } from '../data/mock';
   subjectsGrid?.addEventListener('click', (e) => {
     const target = e.target;
     if (!(target instanceof HTMLElement)) return;
+    if (target.closest('.btn-delete-materia')) return;
     const card = target.closest('.materia-card');
     if (!card) return;
-    const name = card.querySelector('.materia-nombre')?.textContent || '';
-    const subject = subjects.find((s) => s.name === name);
+    const id = card.dataset.id;
+    const subject = subjects.find((s) => s.id === id);
     if (subject) openSubjectModal(subject);
+  });
+
+  subjectsGrid?.addEventListener('click', async (e) => {
+    const target = e.target;
+    if (!(target instanceof HTMLElement)) return;
+    const btn = target.closest('.btn-delete-materia');
+    if (!btn || !userId) return;
+    const id = btn.getAttribute('data-id');
+    if (!id) return;
+    if (!confirm('¿Eliminar esta materia del plan de estudio?')) return;
+    try {
+      const res = await fetch('/api/subjects', {
+        method: 'DELETE',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ id, userId })
+      });
+      if (!res.ok) throw new Error(await res.text());
+      subjects = subjects.filter((s) => s.id !== id);
+      renderSubjects();
+      if (viewMode === 'month') renderCalendar();
+      if (viewMode === 'week') renderWeek();
+    } catch (err) {
+      alert(err?.message || 'No se pudo eliminar la materia.');
+    }
   });
 
   function handleCalendarClick(e) {

@@ -19,9 +19,12 @@ const { tareas } = Astro.props;
           <span class="tarea-hora">{t.hora}</span>
           <span class="tarea-materia">{t.materia}</span>
         </div>
-        <button type="button" class="btn btn-success btn-completar" data-id={t.id} aria-label="Marcar como completada">
-          {t.completada ? '✓ Hecho' : 'Completar'}
-        </button>
+        <div class="tarea-actions">
+          <button type="button" class="btn btn-success btn-completar" data-id={t.id} aria-label="Marcar como completada">
+            {t.completada ? '✓ Hecho' : 'Completar'}
+          </button>
+          <button type="button" class="btn btn-outline btn-eliminar-meta" data-id={t.id} aria-label="Eliminar meta">Eliminar</button>
+        </div>
       </li>
     ))}
   </ul>
@@ -47,6 +50,21 @@ const { tareas } = Astro.props;
     padding: 1rem;
     border-bottom: 1px solid #eee;
     flex-wrap: wrap;
+  }
+  .tarea-actions {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    flex-wrap: wrap;
+  }
+  .btn-eliminar-meta {
+    padding: 0.4rem 0.75rem;
+    font-size: 0.85rem;
+    color: var(--priority-alta);
+    border-color: rgba(229, 115, 115, 0.5);
+  }
+  .btn-eliminar-meta:hover {
+    background: rgba(229, 115, 115, 0.1);
   }
   .tarea-item:last-child {
     border-bottom: none;
@@ -84,6 +102,14 @@ const { tareas } = Astro.props;
       if (!item) return;
       item.classList.toggle('completada');
       btn.textContent = item.classList.contains('completada') ? '✓ Hecho' : 'Completar';
+    });
+  });
+  document.querySelectorAll('.btn-eliminar-meta').forEach((btn) => {
+    btn.addEventListener('click', () => {
+      const item = btn.closest('.tarea-item');
+      if (!item) return;
+      if (!confirm('¿Eliminar esta meta del plan del día?')) return;
+      item.remove();
     });
   });
 </script>
