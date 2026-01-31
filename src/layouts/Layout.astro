@@ -24,7 +24,7 @@ const { title = 'Asistente de Estudio' } = Astro.props;
       <nav class="nav" id="main-nav" aria-label="Navegación principal">
         <a href="/">Inicio</a>
         <a href="/dashboard" data-auth="user">Dashboard</a>
-        <a href="/materias/registro" data-auth="user">Registrar materia</a>
+        
         <a href="/premium">Premium</a>
         <a href="/login" data-auth="guest">Ingresar</a>
         <a href="/registro" data-auth="guest">Registro</a>
@@ -136,16 +136,7 @@ const { title = 'Asistente de Estudio' } = Astro.props;
     chatMessages.scrollTop = chatMessages.scrollHeight;
   }
 
-  const chatWrap = document.getElementById('chat-float-wrap');
-  // Desplegar al acercar el mouse (hover)
-  chatWrap?.addEventListener('mouseenter', () => {
-    chatPanel?.classList.add('open');
-    chatInput?.focus();
-  });
-  chatWrap?.addEventListener('mouseleave', () => {
-    chatPanel?.classList.remove('open');
-  });
-  // Click en FAB también abre (móvil / accesibilidad)
+  // Solo se abre con click
   chatFab?.addEventListener('click', (e) => {
     e.stopPropagation();
     chatPanel?.classList.toggle('open');
