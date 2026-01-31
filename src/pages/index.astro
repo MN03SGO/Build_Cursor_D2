@@ -1,40 +1,102 @@
 ---
 import Layout from '../layouts/Layout.astro';
-import MateriaCard from '../components/MateriaCard.astro';
-import PlanDia from '../components/PlanDia.astro';
-import { materiasMock, planDiaMock } from '../data/mock';
 ---
-<Layout title="Dashboard - Asistente de Estudio">
-  <h1>Dashboard</h1>
-
-  <section class="materias-section">
-    <h2 class="section-title">Materias registradas</h2>
-    <div class="materias-grid">
-      {materiasMock.map((m) => (
-        <MateriaCard
-          nombre={m.nombre}
-          fechaExamen={m.fechaExamen}
-          prioridad={m.prioridad}
-        />
-      ))}
+<Layout title="Inicio - Asistente de Estudio">
+  <section class="hero">
+    <div class="hero-copy fade-up">
+      <span class="pill">Nuevo · IA para estudio</span>
+      <h1>Asistente de Estudio con IA</h1>
+      <p>
+        Organiza tus materias, planifica tu semana y genera planes de estudio con
+        inteligencia artificial en segundos.
+      </p>
+      <div class="hero-actions">
+        <a class="btn btn-primary" href="/registro">Crear cuenta</a>
+        <a class="btn btn-outline" href="/login">Ingresar</a>
+      </div>
+    </div>
+    <div class="hero-card card fade-up">
+      <h2 class="section-title">Todo lo que puedes hacer</h2>
+      <ul>
+        <li>Registrar materias y fechas de exámenes.</li>
+        <li>Generar planes de estudio personalizados.</li>
+        <li>Acceder a funciones premium con más detalle.</li>
+        <li>Consultar tu progreso diario.</li>
+      </ul>
     </div>
   </section>
 
-  <section class="plan-section">
-    <PlanDia tareas={planDiaMock} />
+  <section class="features">
+    <article class="feature-card card fade-up">
+      <h3>Plan diario</h3>
+      <p>Visualiza tus tareas del día con recordatorios y prioridades.</p>
+      <ul class="feature-list">
+        <li>Checklist interactiva</li>
+        <li>Orden por horario</li>
+        <li>Indicadores de avance</li>
+      </ul>
+    </article>
+    <article class="feature-card card fade-up">
+      <h3>IA para estudio</h3>
+      <p>Recibe planes guiados y preguntas de repaso según tu nivel.</p>
+      <ul class="feature-list">
+        <li>Planes por semanas</li>
+        <li>Mini-proyectos</li>
+        <li>Quizzes rápidos</li>
+      </ul>
+    </article>
+    <article class="feature-card card fade-up">
+      <h3>Premium</h3>
+      <p>Obtén respuestas expertas, más profundidad y acceso extendido.</p>
+      <ul class="feature-list">
+        <li>Nivel experto</li>
+        <li>Más preguntas</li>
+        <li>Profundidad avanzada</li>
+      </ul>
+    </article>
   </section>
 </Layout>
 
 <style>
-  .materias-section {
+  .hero {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+    gap: 2rem;
+    align-items: center;
     margin-bottom: 2.5rem;
   }
-  .materias-grid {
-    display: grid;
-    grid-template-columns: repeat(auto-fill, minmax(240px, 1fr));
-    gap: 1.25rem;
+  .hero-copy p {
+    color: var(--text-muted);
+    line-height: 1.6;
   }
-  .plan-section {
-    margin-top: 2rem;
+  .hero-actions {
+    display: flex;
+    gap: 1rem;
+    flex-wrap: wrap;
+    margin-top: 1.5rem;
+  }
+  .hero-card {
+    padding: 1.5rem;
+  }
+  .hero-card ul {
+    margin: 0;
+    padding-left: 1.25rem;
+    color: var(--text-muted);
+  }
+  .features {
+    display: grid;
+    gap: 1.25rem;
+    grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+  }
+  .feature-card {
+    padding: 1.25rem;
+  }
+  .feature-card p {
+    color: var(--text-muted);
+  }
+  .feature-list {
+    margin: 0.75rem 0 0;
+    padding-left: 1.2rem;
+    color: var(--text-muted);
   }
 </style>

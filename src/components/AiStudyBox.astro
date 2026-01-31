@@ -29,6 +29,14 @@ import { defaultStudyParams } from '../lib/ai-params';
     </label>
 
     <label class="field">
+      <span>Plan</span>
+      <select name="plan">
+        <option value="free">Free</option>
+        <option value="premium">Premium</option>
+      </select>
+    </label>
+
+    <label class="field">
       <span>Objetivos</span>
       <textarea name="goals" rows="3">{defaultStudyParams.goals}</textarea>
     </label>
@@ -124,7 +132,8 @@ import { defaultStudyParams } from '../lib/ai-params';
       level: String(formData.get('level') || 'principiante'),
       goals: String(formData.get('goals') || ''),
       weeks: Number(formData.get('weeks') || 4),
-      hoursPerWeek: Number(formData.get('hoursPerWeek') || 4)
+      hoursPerWeek: Number(formData.get('hoursPerWeek') || 4),
+      plan: String(formData.get('plan') || 'free')
     };
 
     try {
