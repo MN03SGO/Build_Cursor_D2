@@ -3,16 +3,20 @@ type GeminiContent = { parts?: GeminiTextPart[] };
 type GeminiCandidate = { content?: GeminiContent };
 type GeminiResponse = { candidates?: GeminiCandidate[]; promptFeedback?: unknown };
 
-const apiKey = import.meta.env.GEMINI_API_KEY;
 const model = 'gemini-2.5-flash';
 
-if (!apiKey || !apiKey.trim()) {
-  throw new Error('GEMINI_API_KEY no está definida en el archivo .env');
+function getApiKey(): string {
+  const apiKey = import.meta.env.GEMINI_API_KEY;
+  if (!apiKey || !apiKey.trim()) {
+    throw new Error('GEMINI_API_KEY no está definida en el archivo .env');
+  }
+  return apiKey;
 }
 
 const baseUrl = 'https://generativelanguage.googleapis.com/v1beta/models';
 
 export async function generateGeminiText(prompt: string) {
+  const apiKey = getApiKey();
   const response = await fetch(`${baseUrl}/${model}:generateContent?key=${apiKey}`, {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },

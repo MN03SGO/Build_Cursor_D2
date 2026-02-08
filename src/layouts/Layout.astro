@@ -51,8 +51,8 @@ const { title = 'MentorAI' } = Astro.props;
         </header>
         <div class="chat-messages" id="chat-messages"></div>
         <form class="chat-form" id="chat-form">
-          <input type="text" id="chat-input" placeholder="Escribe tu pregunta..." required />
-          <button type="submit" class="btn btn-primary">Enviar</button>
+          <input type="text" id="chat-input" placeholder="Escribe tu pregunta de estudio..." required />
+          <button type="submit" class="btn btn-primary">Enviar pregunta</button>
         </form>
       </section>
     </div>
@@ -301,12 +301,23 @@ const { title = 'MentorAI' } = Astro.props;
     gap: 0.5rem;
     padding: 0.75rem;
     border-top: 1px solid #eee;
+    min-width: 0;
+    align-items: center;
   }
   .chat-form input {
-    flex: 1;
-    padding: 0.6rem 0.8rem;
+    flex: 1 1 auto;
+    min-width: 0;
+    max-width: 100%;
+    padding: 0.5rem 0.65rem;
     border-radius: 10px;
     border: 1px solid #ddd;
     font: inherit;
+    font-size: 0.9rem;
+  }
+  .chat-form button {
+    flex-shrink: 0;
+    white-space: nowrap;
+    padding: 0.5rem 0.75rem;
+    font-size: 0.85rem;
   }
 </style>

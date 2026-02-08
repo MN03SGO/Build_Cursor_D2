@@ -68,24 +68,12 @@ import { planDiaMock } from '../data/mock';
           <label>
             Prioridad
             <select name="priority">
-              <option value="alta">Alta</option>
-              <option value="media" selected>Media</option>
-              <option value="baja">Baja</option>
+              <option value="alta">Alta (rojo)</option>
+              <option value="media" selected>Media (amarillo)</option>
+              <option value="baja">Baja (verde)</option>
             </select>
           </label>
-          <label>
-            Color (opcional)
-            <select name="color">
-              <option value="">Sin color</option>
-              <option value="#4a90d9">Azul</option>
-              <option value="#e57373">Rojo</option>
-              <option value="#ffb74d">Naranja</option>
-              <option value="#81c784">Verde</option>
-              <option value="#9575cd">Morado</option>
-              <option value="#4db6ac">Turquesa</option>
-              <option value="#f06292">Rosa</option>
-            </select>
-          </label>
+          <p class="form-hint">El color en el calendario se asigna por prioridad: Alta = rojo, Media = amarillo, Baja = verde.</p>
         </div>
         <div class="form-block" data-type="event">
           <label>
@@ -211,17 +199,36 @@ import { planDiaMock } from '../data/mock';
   }
   .calendar-items {
     display: grid;
-    gap: 0.35rem;
-    font-size: 0.82rem;
+    gap: 0.25rem;
+    font-size: 0.72rem;
   }
   .calendar-item {
-    background: rgba(74, 144, 217, 0.12);
-    padding: 0.25rem 0.4rem;
-    border-radius: 6px;
+    background: rgba(74, 144, 217, 0.08);
+    padding: 0.2rem 0.35rem;
+    border-radius: 4px;
     cursor: pointer;
+    border-left: 3px solid rgba(74, 144, 217, 0.4);
+    line-height: 1.25;
   }
   .calendar-item.event {
-    background: rgba(255, 183, 77, 0.2);
+    background: rgba(255, 183, 77, 0.1);
+    border-left-color: rgba(255, 183, 77, 0.5);
+  }
+  .calendar-item[data-priority="alta"] {
+    background: rgba(220, 38, 38, 0.08);
+    border-left-color: rgba(220, 38, 38, 0.5);
+  }
+  .calendar-item[data-priority="media"] {
+    background: rgba(234, 179, 8, 0.08);
+    border-left-color: rgba(234, 179, 8, 0.5);
+  }
+  .calendar-item[data-priority="baja"] {
+    background: rgba(22, 163, 74, 0.08);
+    border-left-color: rgba(22, 163, 74, 0.5);
+  }
+  .calendar-item-more {
+    border-left-color: transparent;
+    background: rgba(0, 0, 0, 0.05);
   }
   .plan-section {
     margin-top: 2rem;
@@ -291,6 +298,12 @@ import { planDiaMock } from '../data/mock';
     margin: 0;
     color: var(--text-muted);
     min-height: 1.2rem;
+  }
+  .form-hint {
+    margin: 0;
+    font-size: 0.85rem;
+    color: var(--text-muted);
+    font-weight: normal;
   }
 </style>
 
@@ -392,13 +405,13 @@ import { planDiaMock } from '../data/mock';
       id: s.id,
       label: s.name,
       type: 'subject',
-      color: s.color || ''
+      priority: s.priority || 'media'
     }));
     const dayEvents = events.filter((e) => e.date === dateKey).map((e) => ({
       id: e.id,
       label: e.title,
       type: 'event',
-      color: ''
+      priority: ''
     }));
     return [...daySubjects, ...dayEvents];
   }
@@ -444,11 +457,11 @@ import { planDiaMock } from '../data/mock';
       const itemsHtml = items
         .slice(0, 3)
         .map((item) => {
-          const colorStyle = item.color ? `style="background: ${item.color}; color: #fff;"` : '';
-          return `<div class="calendar-item ${item.type === 'event' ? 'event' : ''}" data-id="${item.id}" data-type="${item.type}" ${colorStyle}>${item.label}</div>`;
+          const priorityAttr = item.priority ? ` data-priority="${item.priority}"` : '';
+          return `<div class="calendar-item ${item.type === 'event' ? 'event' : ''}" data-id="${item.id}" data-type="${item.type}"${priorityAttr}>${item.label}</div>`;
         })
         .join('');
-      const more = items.length > 3 ? `<div class="calendar-item">+${items.length - 3} más</div>` : '';
+      const more = items.length > 3 ? `<div class="calendar-item calendar-item-more">+${items.length - 3} más</div>` : '';
       cell.innerHTML = `<header>${day}</header><div class="calendar-items">${itemsHtml}${more}</div>`;
       calendarGrid.appendChild(cell);
     }
@@ -474,8 +487,8 @@ import { planDiaMock } from '../data/mock';
       dayBox.className = 'week-day';
       const itemsHtml = items
         .map((item) => {
-          const colorStyle = item.color ? `style="background: ${item.color}; color: #fff;"` : '';
-          return `<div class="calendar-item ${item.type === 'event' ? 'event' : ''}" data-id="${item.id}" data-type="${item.type}" ${colorStyle}>${item.label}</div>`;
+          const priorityAttr = item.priority ? ` data-priority="${item.priority}"` : '';
+          return `<div class="calendar-item ${item.type === 'event' ? 'event' : ''}" data-id="${item.id}" data-type="${item.type}"${priorityAttr}>${item.label}</div>`;
         })
         .join('');
       dayBox.innerHTML = `

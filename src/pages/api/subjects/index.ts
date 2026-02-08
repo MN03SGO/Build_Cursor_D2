@@ -73,6 +73,10 @@ export const POST: APIRoute = async ({ request }) => {
     return new Response('Datos inválidos', { status: 400 });
   }
 
+  const colorByPriority =
+    priority === 'alta' ? '#dc2626' : priority === 'baja' ? '#16a34a' : '#eab308';
+  const finalColor = (color && color.trim()) ? color : colorByPriority;
+
   try {
     const supabase = getSupabase();
     const { data: row, error } = await supabase
@@ -82,7 +86,7 @@ export const POST: APIRoute = async ({ request }) => {
         name,
         exam_date: examDate,
         priority,
-        color
+        color: finalColor
       })
       .select('id, name, exam_date, priority, color')
       .single();
@@ -146,11 +150,15 @@ export const PUT: APIRoute = async ({ request }) => {
     return new Response('Datos inválidos', { status: 400 });
   }
 
+  const colorByPriorityPut =
+    priority === 'alta' ? '#dc2626' : priority === 'baja' ? '#16a34a' : '#eab308';
+  const finalColorPut = (color && color.trim()) ? color : colorByPriorityPut;
+
   try {
     const supabase = getSupabase();
     const { error } = await supabase
       .from('subjects')
-      .update({ name, exam_date: examDate, priority, color })
+      .update({ name, exam_date: examDate, priority, color: finalColorPut })
       .eq('id', id)
       .eq('user_id', userId);
 
@@ -165,7 +173,7 @@ export const PUT: APIRoute = async ({ request }) => {
         name,
         exam_date: examDate,
         priority,
-        color
+        color: finalColorPut
       }),
       { status: 200, headers: { 'Content-Type': 'application/json' } }
     );

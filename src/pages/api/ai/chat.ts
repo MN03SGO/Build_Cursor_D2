@@ -1,5 +1,6 @@
 import type { APIRoute } from 'astro';
 import { generateGeminiText } from '../../../lib/geminis';
+import { isOllamaConfigured, generateOllamaText } from '../../../lib/ollama';
 
 export const prerender = false;
 
@@ -34,15 +35,20 @@ Pregunta del usuario: ${message}
   `.trim();
 
   try {
-    const reply = await generateGeminiText(prompt);
+    let reply: string;
+    if (isOllamaConfigured()) {
+      reply = await generateOllamaText(prompt);
+    } else {
+      reply = await generateGeminiText(prompt);
+    }
     return new Response(JSON.stringify({ reply }), {
       status: 200,
       headers: { 'Content-Type': 'application/json' }
     });
   } catch (error) {
     console.error('Error generando respuesta IA', error);
-    const message = error instanceof Error ? error.message : 'Error generando respuesta IA';
-    return new Response(JSON.stringify({ error: message }), {
+    const msg = error instanceof Error ? error.message : 'Error generando respuesta IA';
+    return new Response(JSON.stringify({ error: msg }), {
       status: 500,
       headers: { 'Content-Type': 'application/json' }
     });
