@@ -13,6 +13,10 @@ export const POST: APIRoute = async ({ request }) => {
     return new Response('JSON inválido', { status: 400 });
   }
 
+  const nombre =
+    typeof (payload as { nombre?: unknown }).nombre === 'string'
+      ? (payload as { nombre?: string }).nombre?.trim()
+      : '';
   const email =
     typeof (payload as { email?: unknown }).email === 'string'
       ? (payload as { email?: string }).email?.trim()
@@ -23,7 +27,7 @@ export const POST: APIRoute = async ({ request }) => {
       : '';
 
   const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-  if (!email || !password || !emailRegex.test(email)) {
+  if (!nombre || !email || !password || !emailRegex.test(email)) {
     return new Response('Datos inválidos', { status: 400 });
   }
 
@@ -45,6 +49,12 @@ export const POST: APIRoute = async ({ request }) => {
 
     if (!user) {
       return new Response('Credenciales inválidas', { status: 401 });
+    }
+
+    const nombreMatch =
+      (user.nombre ?? '').trim().toLowerCase() === nombre.toLowerCase();
+    if (!nombreMatch) {
+      return new Response('El nombre no coincide con el de esta cuenta.', { status: 401 });
     }
 
     return new Response(

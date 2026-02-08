@@ -53,20 +53,22 @@ export const POST: APIRoute = async ({ request }) => {
 
     if (error) {
       console.error('Error registrando usuario', error);
-      return new Response('Error registrando usuario', { status: 500 });
+      const msg = error.message || 'Error desconocido de Supabase';
+      return new Response(`Error registrando usuario: ${msg}`, { status: 500 });
     }
 
     return new Response(
       JSON.stringify({
-        id: newUser.id,
-        nombre: newUser.nombre,
-        email: newUser.email,
-        plan: newUser.plan ?? 'free'
+        id: String(newUser?.id ?? ''),
+        nombre: newUser?.nombre ?? nombre,
+        email: newUser?.email ?? email,
+        plan: newUser?.plan ?? 'free'
       }),
       { status: 201, headers: { 'Content-Type': 'application/json' } }
     );
   } catch (error) {
     console.error('Error registrando usuario', error);
-    return new Response('Error registrando usuario', { status: 500 });
+    const msg = error instanceof Error ? error.message : 'Error inesperado';
+    return new Response(`Error registrando usuario: ${msg}`, { status: 500 });
   }
 };
