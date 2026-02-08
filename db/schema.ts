@@ -1,42 +1,42 @@
 /*
-  Esquema base PostgreSQL para la app.
-  Puedes ejecutar este SQL directamente en tu instancia.
+  Esquema para Supabase (PostgreSQL).
+  Copia y pega este SQL en el editor SQL de tu proyecto Supabase:
+  Dashboard → SQL Editor → New query → Pegar y ejecutar.
 */
 
 export const schemaSql = `
--- Tabla de Usuarios (Conexión con Vudy)
+-- Tabla de Usuarios (login/registro de la app)
 CREATE TABLE IF NOT EXISTS users (
-    id SERIAL PRIMARY KEY,
-    email VARCHAR(255) UNIQUE NOT NULL,
-    vudy_customer_id VARCHAR(100),
-    plan_status VARCHAR(50) DEFAULT 'free' -- 'free' o 'premium'
+    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    nombre TEXT,
+    email TEXT UNIQUE NOT NULL,
+    password_hash TEXT NOT NULL,
+    plan TEXT DEFAULT 'free',
+    created_at TIMESTAMPTZ DEFAULT now()
 );
 
 -- Tabla de Materias
 CREATE TABLE IF NOT EXISTS subjects (
-    id SERIAL PRIMARY KEY,
-    user_id INTEGER REFERENCES users(id),
-    name VARCHAR(100) NOT NULL,
-    color VARCHAR(20),
-    difficulty INTEGER DEFAULT 3 -- Escala del 1 al 5
+    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    user_id UUID NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+    name TEXT NOT NULL,
+    exam_date TEXT,
+    priority TEXT DEFAULT 'media',
+    color TEXT,
+    created_at TIMESTAMPTZ DEFAULT now()
 );
 
--- Tabla de Exámenes
-CREATE TABLE IF NOT EXISTS exams (
-    id SERIAL PRIMARY KEY,
-    subject_id INTEGER REFERENCES subjects(id),
-    title VARCHAR(100),
-    date TIMESTAMP NOT NULL,
-    priority_level VARCHAR(20) -- 'alta', 'media', 'baja'
+-- Tabla de Eventos
+CREATE TABLE IF NOT EXISTS events (
+    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    user_id UUID NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+    title TEXT,
+    date TEXT,
+    note TEXT,
+    created_at TIMESTAMPTZ DEFAULT now()
 );
 
--- Tabla de Sesiones de Estudio (El historial para la IA)
-CREATE TABLE IF NOT EXISTS study_sessions (
-    id SERIAL PRIMARY KEY,
-    user_id INTEGER REFERENCES users(id),
-    subject_id INTEGER REFERENCES subjects(id),
-    duration_minutes INTEGER,
-    method_used VARCHAR(50), -- 'Pomodoro', 'Feynman', etc.
-    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
-);
+-- Índices para búsquedas por usuario
+CREATE INDEX IF NOT EXISTS idx_subjects_user_id ON subjects(user_id);
+CREATE INDEX IF NOT EXISTS idx_events_user_id ON events(user_id);
 `.trim();

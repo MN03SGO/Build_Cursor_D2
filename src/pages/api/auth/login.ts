@@ -1,6 +1,6 @@
 import type { APIRoute } from 'astro';
 import { createHash } from 'crypto';
-import { getDb } from '../../../lib/db';
+import { getSupabase } from '../../../lib/db';
 
 export const prerender = false;
 
@@ -30,20 +30,26 @@ export const POST: APIRoute = async ({ request }) => {
   const passwordHash = createHash('sha256').update(password).digest('hex');
 
   try {
-    const db = await getDb();
-    const user = await db.collection('users').findOne({
-      email,
-      password_hash: passwordHash
-    });
+    const supabase = getSupabase();
+    const { data: user, error } = await supabase
+      .from('users')
+      .select('id, nombre, email, plan')
+      .eq('email', email)
+      .eq('password_hash', passwordHash)
+      .maybeSingle();
+
+    if (error) {
+      console.error('Error iniciando sesión', error);
+      return new Response('Error iniciando sesión', { status: 500 });
+    }
 
     if (!user) {
       return new Response('Credenciales inválidas', { status: 401 });
     }
 
-    const id = user?._id ? user._id.toString() : '';
     return new Response(
       JSON.stringify({
-        id,
+        id: user.id,
         nombre: user.nombre,
         email: user.email,
         plan: user.plan ?? 'free'

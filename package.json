@@ -10,7 +10,8 @@
   },
   "dependencies": {
     "@astrojs/vercel": "^9.0.4",
-    "astro": "^5.17.1",
-    "mongodb": "^7.0.0"
+    "@supabase/supabase-js": "^2.95.3",
+    "@vercel/analytics": "^1.6.1",
+    "astro": "^5.17.1"
   }
 }

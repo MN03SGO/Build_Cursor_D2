@@ -1,6 +1,5 @@
 import type { APIRoute } from 'astro';
-import { ObjectId } from 'mongodb';
-import { getDb } from '../../../lib/db';
+import { getSupabase } from '../../../lib/db';
 
 export const prerender = false;
 
@@ -11,14 +10,20 @@ export const GET: APIRoute = async ({ url }) => {
   }
 
   try {
-    const db = await getDb();
-    const data = await db
-      .collection('events')
-      .find({ user_id: userId })
-      .sort({ created_at: -1 })
-      .toArray();
-    const mapped = data.map((item) => ({
-      id: item._id.toString(),
+    const supabase = getSupabase();
+    const { data, error } = await supabase
+      .from('events')
+      .select('id, title, date, note')
+      .eq('user_id', userId)
+      .order('created_at', { ascending: false });
+
+    if (error) {
+      console.error('Error cargando eventos', error);
+      return new Response('Error cargando eventos', { status: 500 });
+    }
+
+    const mapped = (data ?? []).map((item) => ({
+      id: item.id,
       title: item.title,
       date: item.date,
       note: item.note ?? ''
@@ -64,21 +69,29 @@ export const POST: APIRoute = async ({ request }) => {
   }
 
   try {
-    const db = await getDb();
-    const result = await db.collection('events').insertOne({
-      user_id: userId,
-      title,
-      date,
-      note,
-      created_at: new Date()
-    });
-
-    return new Response(
-      JSON.stringify({
-        id: result.insertedId.toString(),
+    const supabase = getSupabase();
+    const { data: row, error } = await supabase
+      .from('events')
+      .insert({
+        user_id: userId,
         title,
         date,
         note
+      })
+      .select('id, title, date, note')
+      .single();
+
+    if (error) {
+      console.error('Error creando evento', error);
+      return new Response('Error creando evento', { status: 500 });
+    }
+
+    return new Response(
+      JSON.stringify({
+        id: row.id,
+        title: row.title,
+        date: row.date,
+        note: row.note
       }),
       { status: 201, headers: { 'Content-Type': 'application/json' } }
     );
@@ -118,16 +131,22 @@ export const PUT: APIRoute = async ({ request }) => {
       ? (payload as { note?: string }).note
       : '';
 
-  if (!id || !userId || !title || !date || !ObjectId.isValid(id)) {
+  if (!id || !userId || !title || !date) {
     return new Response('Datos inválidos', { status: 400 });
   }
 
   try {
-    const db = await getDb();
-    await db.collection('events').updateOne(
-      { _id: new ObjectId(id), user_id: userId },
-      { $set: { title, date, note } }
-    );
+    const supabase = getSupabase();
+    const { error } = await supabase
+      .from('events')
+      .update({ title, date, note })
+      .eq('id', id)
+      .eq('user_id', userId);
+
+    if (error) {
+      console.error('Error actualizando evento', error);
+      return new Response('Error actualizando evento', { status: 500 });
+    }
 
     return new Response(
       JSON.stringify({
@@ -162,13 +181,23 @@ export const DELETE: APIRoute = async ({ request }) => {
       ? (payload as { userId?: string }).userId?.trim()
       : '';
 
-  if (!id || !userId || !ObjectId.isValid(id)) {
+  if (!id || !userId) {
     return new Response('Datos inválidos', { status: 400 });
   }
 
   try {
-    const db = await getDb();
-    await db.collection('events').deleteOne({ _id: new ObjectId(id), user_id: userId });
+    const supabase = getSupabase();
+    const { error } = await supabase
+      .from('events')
+      .delete()
+      .eq('id', id)
+      .eq('user_id', userId);
+
+    if (error) {
+      console.error('Error eliminando evento', error);
+      return new Response('Error eliminando evento', { status: 500 });
+    }
+
     return new Response(JSON.stringify({ id }), {
       status: 200,
       headers: { 'Content-Type': 'application/json' }

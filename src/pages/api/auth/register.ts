@@ -1,6 +1,6 @@
 import type { APIRoute } from 'astro';
 import { createHash } from 'crypto';
-import { getDb } from '../../../lib/db';
+import { getSupabase } from '../../../lib/db';
 
 export const prerender = false;
 
@@ -34,27 +34,34 @@ export const POST: APIRoute = async ({ request }) => {
   const passwordHash = createHash('sha256').update(password).digest('hex');
 
   try {
-    const db = await getDb();
-    const existing = await db.collection('users').findOne({ email });
+    const supabase = getSupabase();
+    const { data: existing } = await supabase.from('users').select('id').eq('email', email).maybeSingle();
     if (existing) {
       return new Response('El correo ya está registrado', { status: 409 });
     }
 
-    const result = await db.collection('users').insertOne({
-      nombre,
-      email,
-      password_hash: passwordHash,
-      plan: 'free',
-      created_at: new Date()
-    });
-
-    const id = result.insertedId ? result.insertedId.toString() : '';
-    return new Response(
-      JSON.stringify({
-        id,
+    const { data: newUser, error } = await supabase
+      .from('users')
+      .insert({
         nombre,
         email,
+        password_hash: passwordHash,
         plan: 'free'
+      })
+      .select('id, nombre, email, plan')
+      .single();
+
+    if (error) {
+      console.error('Error registrando usuario', error);
+      return new Response('Error registrando usuario', { status: 500 });
+    }
+
+    return new Response(
+      JSON.stringify({
+        id: newUser.id,
+        nombre: newUser.nombre,
+        email: newUser.email,
+        plan: newUser.plan ?? 'free'
       }),
       { status: 201, headers: { 'Content-Type': 'application/json' } }
     );

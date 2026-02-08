@@ -1,10 +1,13 @@
 import type { APIRoute } from 'astro';
-import { getDb } from '../../../lib/db';
+import { getSupabase } from '../../../lib/db';
 
 export const GET: APIRoute = async () => {
   try {
-    const db = await getDb();
-    await db.command({ ping: 1 });
+    const supabase = getSupabase();
+    const { error } = await supabase.from('users').select('id').limit(1).maybeSingle();
+    if (error && error.code !== 'PGRST116') {
+      throw error;
+    }
     return new Response(JSON.stringify({ ok: true }), {
       status: 200,
       headers: { 'Content-Type': 'application/json' }
