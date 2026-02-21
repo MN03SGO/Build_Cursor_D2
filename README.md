@@ -123,6 +123,18 @@ Así tendrías un único comando para levantar app + BD en cualquier máquina co
 
 Si la tabla `subjects` en Supabase se creó sin las columnas de hora y ves *"Could not find the 'time_end' column"*, ejecuta en el **SQL Editor** de Supabase (en el proyecto que uses, local o prod) el SQL indicado en **`db/SUPABASE-ADD-TIME-COLUMNS.md`**.
 
+### Login / registro con GitHub
+
+Para que los botones **"Iniciar sesión con GitHub"** y **"Registrarse con GitHub"** funcionen:
+
+1. En **Supabase Dashboard** → **Authentication** → **Providers** activa **GitHub** y configura Client ID / Secret de tu app de GitHub.
+2. En **Authentication** → **URL Configuration** define **Site URL** y en **Redirect URLs** añade la URL de tu app (p. ej. `https://tu-app.vercel.app/**`).
+3. En tu proyecto (local `.env` o Vercel **Environment Variables**) define las mismas credenciales de Supabase pero expuestas al cliente (necesarias para el flujo OAuth en el navegador):
+   - `PUBLIC_SUPABASE_URL` = mismo valor que `SUPABASE_URL`
+   - `PUBLIC_SUPABASE_ANON_KEY` = mismo valor que `SUPABASE_ANON_KEY`
+
+Sin `PUBLIC_SUPABASE_URL` y `PUBLIC_SUPABASE_ANON_KEY`, los botones de GitHub mostrarán un mensaje indicando que faltan esas variables.
+
 ---
 
 ## Herramientas del proyecto

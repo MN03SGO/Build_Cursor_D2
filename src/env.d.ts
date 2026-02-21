@@ -3,6 +3,9 @@
 interface ImportMetaEnv {
   readonly SUPABASE_URL: string;
   readonly SUPABASE_ANON_KEY: string;
+  /** Mismas que las de arriba; necesarias en el cliente para OAuth con GitHub */
+  readonly PUBLIC_SUPABASE_URL?: string;
+  readonly PUBLIC_SUPABASE_ANON_KEY?: string;
   /** Opcional: conexión directa Postgres (para scripts o ORM) */
   readonly SUPABASE_DB_URL?: string;
   /** Postgres local proyectoBD (scripts db:local:migrate). Ej: postgresql://proyectoBD:proyectoBD_local@localhost:5433/proyectoBD */

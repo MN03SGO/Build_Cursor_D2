@@ -1,0 +1,106 @@
+---
+import Layout from '../../layouts/Layout.astro';
+---
+<Layout title="Conectando - MentorAI">
+  <div class="callback-wrap">
+    <p class="callback-status" id="callback-status">Conectando con tu cuenta...</p>
+    <p class="callback-hint">Si no eres redirigido en unos segundos, <a href="/login">vuelve al inicio de sesión</a>.</p>
+  </div>
+</Layout>
+
+<style>
+  .callback-wrap {
+    max-width: 420px;
+    margin: 2rem auto;
+    text-align: center;
+    padding: 1.5rem;
+  }
+  .callback-status {
+    font-weight: 600;
+    color: var(--text);
+    margin: 0 0 0.5rem;
+  }
+  .callback-hint {
+    font-size: 0.9rem;
+    color: var(--text-muted);
+    margin: 0;
+  }
+  .callback-hint a {
+    color: var(--accent);
+    font-weight: 600;
+  }
+</style>
+
+<script>
+  import { createClient } from '@supabase/supabase-js';
+
+  const supabaseUrl = import.meta.env.PUBLIC_SUPABASE_URL;
+  const supabaseAnonKey = import.meta.env.PUBLIC_SUPABASE_ANON_KEY;
+  const statusEl = document.getElementById('callback-status');
+
+  async function run() {
+    const params = new URLSearchParams(window.location.search);
+    const code = params.get('code');
+    const errorParam = params.get('error');
+
+    if (errorParam) {
+      if (statusEl) statusEl.textContent = 'Acceso denegado o error de GitHub.';
+      setTimeout(() => { window.location.href = '/login?error=oauth'; }, 2500);
+      return;
+    }
+
+    if (!code) {
+      if (statusEl) statusEl.textContent = 'No se recibió el código de autorización.';
+      setTimeout(() => { window.location.href = '/login?error=missing_code'; }, 2500);
+      return;
+    }
+
+    if (!supabaseUrl || !supabaseAnonKey) {
+      if (statusEl) statusEl.textContent = 'Login con GitHub no configurado (falta PUBLIC_SUPABASE_URL / PUBLIC_SUPABASE_ANON_KEY).';
+      return;
+    }
+
+    try {
+      const supabase = createClient(supabaseUrl, supabaseAnonKey);
+      const { data, error } = await supabase.auth.exchangeCodeForSession(code);
+
+      if (error) {
+        if (statusEl) statusEl.textContent = 'Sesión inválida o expirada.';
+        setTimeout(() => { window.location.href = '/login?error=exchange'; }, 2500);
+        return;
+      }
+
+      const token = data?.session?.access_token;
+      if (!token) {
+        if (statusEl) statusEl.textContent = 'No se pudo obtener la sesión.';
+        setTimeout(() => { window.location.href = '/login'; }, 2500);
+        return;
+      }
+
+      if (statusEl) statusEl.textContent = 'Sincronizando tu cuenta...';
+
+      const res = await fetch('/api/auth/sync-oauth', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ access_token: token })
+      });
+
+      if (!res.ok) {
+        const msg = await res.text();
+        if (statusEl) statusEl.textContent = msg || 'Error al sincronizar la cuenta.';
+        setTimeout(() => { window.location.href = '/login?error=sync'; }, 3000);
+        return;
+      }
+
+      const user = await res.json();
+      localStorage.setItem('userSession', JSON.stringify(user));
+      if (statusEl) statusEl.textContent = '¡Listo! Redirigiendo...';
+      window.location.replace('/dashboard');
+    } catch (err) {
+      if (statusEl) statusEl.textContent = 'Error inesperado. Intenta de nuevo.';
+      setTimeout(() => { window.location.href = '/login'; }, 2500);
+    }
+  }
+
+  run();
+</script>
