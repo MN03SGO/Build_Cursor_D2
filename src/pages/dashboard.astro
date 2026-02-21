@@ -173,7 +173,7 @@ import { planDiaMock } from '../data/mock';
   }
   .materias-grid {
     display: grid;
-    grid-template-columns: repeat(auto-fill, minmax(240px, 1fr));
+    grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
     gap: 1.25rem;
   }
   .empty-state {
@@ -181,19 +181,96 @@ import { planDiaMock } from '../data/mock';
     margin-top: 1rem;
     display: none;
   }
-  .materias-section :global(.materia-card-actions) {
-    margin-top: 0.75rem;
-    padding-top: 0.75rem;
-    border-top: 1px solid #eee;
+  /* Tarjetas de materias: layout claro, contenido sin amontonar */
+  .materias-section :global(.materia-card) {
+    display: flex;
+    flex-direction: column;
+    gap: 1rem;
+    padding: 1.35rem;
+    border-radius: var(--radius);
+    box-shadow: var(--shadow);
+    border: 1px solid rgba(0, 0, 0, 0.06);
+    min-height: 0;
+    transition: transform 0.2s, box-shadow 0.2s;
   }
-  .materias-section :global(.btn-delete-materia) {
-    padding: 0.4rem 0.75rem;
+  .materias-section :global(.materia-card:hover) {
+    transform: translateY(-2px);
+    box-shadow: var(--shadow-lg);
+  }
+  .materias-section :global(.materia-card-header) {
+    display: flex;
+    align-items: flex-start;
+    justify-content: space-between;
+    gap: 0.75rem;
+    min-height: 0;
+  }
+  .materias-section :global(.materia-nombre) {
+    margin: 0;
+    font-size: 1.1rem;
+    font-weight: 600;
+    color: var(--text);
+    line-height: 1.4;
+    flex: 1;
+    word-break: break-word;
+  }
+  .materias-section :global(.materia-card .badge) {
+    flex-shrink: 0;
+    padding: 0.28rem 0.65rem;
+    border-radius: 20px;
+    font-size: 0.75rem;
+    font-weight: 600;
+    text-transform: capitalize;
+  }
+  /* Bloque fecha + hora: separado del header para que no se amontone */
+  .materias-section :global(.materia-card .materia-info) {
+    display: flex;
+    flex-direction: column;
+    gap: 0.35rem;
+  }
+  .materias-section :global(.materia-fecha),
+  .materias-section :global(.materia-time) {
+    margin: 0;
+    font-size: 0.9rem;
+    color: var(--text-muted);
+    line-height: 1.45;
+  }
+  .materias-section :global(.materia-time) {
     font-size: 0.85rem;
-    color: var(--priority-alta);
-    border-color: rgba(229, 115, 115, 0.5);
+  }
+  .materias-section :global(.materia-card-actions) {
+    margin-top: auto;
+    padding-top: 1rem;
+    border-top: 1px solid rgba(0, 0, 0, 0.08);
+    display: flex;
+    justify-content: flex-end;
+    align-items: center;
+  }
+  /* Botón Eliminar: estilo discreto y estético */
+  .materias-section :global(.btn-delete-materia) {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.4rem;
+    padding: 0.5rem 0.9rem;
+    font-size: 0.8rem;
+    font-weight: 500;
+    color: #b91c1c;
+    background: transparent;
+    border: 1px solid rgba(185, 28, 28, 0.25);
+    border-radius: 8px;
+    cursor: pointer;
+    transition: background 0.2s, border-color 0.2s, color 0.2s;
+    min-height: auto;
   }
   .materias-section :global(.btn-delete-materia:hover) {
-    background: rgba(229, 115, 115, 0.1);
+    background: rgba(185, 28, 28, 0.08);
+    border-color: rgba(185, 28, 28, 0.4);
+    color: #991b1b;
+  }
+  .materias-section :global(.btn-delete-materia .btn-delete-icon) {
+    width: 1em;
+    height: 1em;
+    opacity: 0.9;
   }
   .calendar-section {
     margin-bottom: 2.5rem;
@@ -649,6 +726,17 @@ import { planDiaMock } from '../data/mock';
   let currentDate = new Date();
   let viewMode = 'month';
 
+  function escapeHtml(s) {
+    if (s == null) return '';
+    const str = String(s);
+    return str
+      .replace(/&/g, '&amp;')
+      .replace(/</g, '&lt;')
+      .replace(/>/g, '&gt;')
+      .replace(/"/g, '&quot;')
+      .replace(/'/g, '&#39;');
+  }
+
   // Título: día actual ej. "Lunes 16 de febrero" — ejecutar cuando el DOM esté listo
   function setDashboardTitle() {
     const el = document.getElementById('dashboard-title');
@@ -734,14 +822,24 @@ import { planDiaMock } from '../data/mock';
       card.className = `materia-card prioridad-${pri}`;
       card.dataset.id = subject.id;
       card.dataset.priority = pri;
+      const timeStart = (subject.time_start || '').toString().trim();
+      const timeEnd = (subject.time_end || '').toString().trim();
+      const timeStr = timeStart && timeEnd ? `${timeStart} – ${timeEnd}` : timeStart || timeEnd || '';
+      const timeHtml = timeStr ? `<p class="materia-time">🕐 ${escapeHtml(timeStr)}</p>` : '';
       card.innerHTML = `
         <div class="materia-card-header">
-          <h3 class="materia-nombre">${subject.name}</h3>
-          <span class="badge prioridad-${pri}">${subject.priority}</span>
+          <h3 class="materia-nombre">${escapeHtml(subject.name)}</h3>
+          <span class="badge prioridad-${pri}">${escapeHtml(subject.priority)}</span>
         </div>
-        <p class="materia-fecha">📅 Fecha a realizar: ${subject.exam_date || 'Sin fecha'}</p>
+        <div class="materia-info">
+          <p class="materia-fecha">📅 Fecha a realizar: ${escapeHtml(subject.exam_date || 'Sin fecha')}</p>
+          ${timeHtml}
+        </div>
         <div class="materia-card-actions">
-          <button type="button" class="btn btn-outline btn-sm btn-delete-materia" data-id="${subject.id}" aria-label="Eliminar materia">Eliminar</button>
+          <button type="button" class="btn-delete-materia" data-id="${subject.id}" aria-label="Eliminar materia">
+            <svg class="btn-delete-icon" xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 6h18M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/><line x1="10" y1="11" x2="10" y2="17"/><line x1="14" y1="11" x2="14" y2="17"/></svg>
+            Eliminar
+          </button>
         </div>
       `;
       subjectsGrid.appendChild(card);
@@ -766,14 +864,24 @@ import { planDiaMock } from '../data/mock';
         card.className = `materia-card prioridad-${p}`;
         card.dataset.id = subject.id;
         card.dataset.priority = p;
+        const timeStart = (subject.time_start || '').toString().trim();
+        const timeEnd = (subject.time_end || '').toString().trim();
+        const timeStr = timeStart && timeEnd ? `${timeStart} – ${timeEnd}` : timeStart || timeEnd || '';
+        const timeHtml = timeStr ? `<p class="materia-time">🕐 ${escapeHtml(timeStr)}</p>` : '';
         card.innerHTML = `
           <div class="materia-card-header">
-            <h3 class="materia-nombre">${subject.name}</h3>
-            <span class="badge prioridad-${p}">${subject.priority}</span>
+            <h3 class="materia-nombre">${escapeHtml(subject.name)}</h3>
+            <span class="badge prioridad-${p}">${escapeHtml(subject.priority)}</span>
           </div>
-          <p class="materia-fecha">📅 Fecha a realizar: ${subject.exam_date || 'Sin fecha'}</p>
+          <div class="materia-info">
+            <p class="materia-fecha">📅 Fecha a realizar: ${escapeHtml(subject.exam_date || 'Sin fecha')}</p>
+            ${timeHtml}
+          </div>
           <div class="materia-card-actions">
-            <button type="button" class="btn btn-outline btn-sm btn-delete-materia" data-id="${subject.id}">Eliminar</button>
+            <button type="button" class="btn-delete-materia" data-id="${subject.id}" aria-label="Eliminar materia">
+              <svg class="btn-delete-icon" xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 6h18M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/><line x1="10" y1="11" x2="10" y2="17"/><line x1="14" y1="11" x2="14" y2="17"/></svg>
+              Eliminar
+            </button>
           </div>
         `;
         container.appendChild(card);
