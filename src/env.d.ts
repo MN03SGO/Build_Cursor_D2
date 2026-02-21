@@ -5,6 +5,8 @@ interface ImportMetaEnv {
   readonly SUPABASE_ANON_KEY: string;
   /** Opcional: conexión directa Postgres (para scripts o ORM) */
   readonly SUPABASE_DB_URL?: string;
+  /** Postgres local proyectoBD (scripts db:local:migrate). Ej: postgresql://proyectoBD:proyectoBD_local@localhost:5433/proyectoBD */
+  readonly LOCAL_PG_URL?: string;
   readonly GEMINI_API_KEY: string;
   readonly GEMINI_MODEL?: string;
   /** Si está definida, el chat usará Ollama en lugar de Gemini (ej: http://localhost:11434) */

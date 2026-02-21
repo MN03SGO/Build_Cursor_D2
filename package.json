@@ -6,12 +6,31 @@
   "scripts": {
     "dev": "astro dev",
     "build": "astro build",
-    "preview": "astro preview"
+    "preview": "astro preview",
+    "db:local:up": "docker compose -f docker-compose.local-db.yml up -d",
+    "db:local:down": "docker compose -f docker-compose.local-db.yml down",
+    "db:local:migrate": "node scripts/migrate-local-db.js"
+  },
+  "devDependencies": {
+    "@types/pg": "^8.11.0",
+    "dotenv": "^16.4.5",
+    "pg": "^8.13.0"
   },
   "dependencies": {
+    "@astrojs/react": "^4.4.2",
     "@astrojs/vercel": "^9.0.4",
     "@supabase/supabase-js": "^2.95.3",
+    "@tailwindcss/vite": "^4.2.0",
+    "@types/react": "^19.2.14",
+    "@types/react-dom": "^19.2.3",
     "@vercel/analytics": "^1.6.1",
-    "astro": "^5.17.1"
+    "astro": "^5.17.1",
+    "clsx": "^2.1.1",
+    "date-fns": "^4.1.0",
+    "react": "^19.2.4",
+    "react-day-picker": "^9.13.2",
+    "react-dom": "^19.2.4",
+    "tailwind-merge": "^3.5.0",
+    "tailwindcss": "^4.2.0"
   }
 }

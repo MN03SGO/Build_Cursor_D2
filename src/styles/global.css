@@ -1,3 +1,5 @@
+@import "tailwindcss";
+
 *,
 *::before,
 *::after {
@@ -19,6 +21,224 @@
   --radius: 12px;
   --shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
   --shadow-lg: 0 10px 24px rgba(0, 0, 0, 0.12);
+}
+
+/* Calendario estético (calendar-pretty) */
+.calendar-pretty {
+  --cal-bg: var(--card);
+  --cal-text: var(--text);
+  --cal-muted: var(--text-muted);
+  --cal-accent: var(--accent);
+  --cal-accent-soft: rgba(74, 144, 217, 0.12);
+  --cal-radius: 16px;
+  --cal-day-size: clamp(36px, 8vw, 44px);
+  --cal-gap: 4px;
+  --cal-padding: clamp(1rem, 4vw, 1.5rem);
+  width: 100%;
+  max-width: 100%;
+  margin: 0 auto;
+  padding: var(--cal-padding);
+  background: var(--cal-bg);
+  border-radius: var(--cal-radius);
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.06), 0 4px 12px rgba(0, 0, 0, 0.04);
+  border: 1px solid rgba(0, 0, 0, 0.06);
+  box-sizing: border-box;
+}
+
+.calendar-pretty__months {
+  width: 100%;
+  justify-content: center;
+}
+
+.calendar-pretty__month {
+  width: 100%;
+}
+
+.calendar-pretty__caption {
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 2.5rem;
+  margin-bottom: 1.25rem;
+  padding: 0 2.5rem;
+}
+
+.calendar-pretty__caption-label {
+  font-size: clamp(1.1rem, 3.5vw, 1.35rem);
+  font-weight: 600;
+  color: var(--cal-text);
+  letter-spacing: -0.02em;
+  position: relative;
+  z-index: 1;
+}
+
+.calendar-pretty__nav {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  pointer-events: none;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0 0.25rem;
+}
+
+.calendar-pretty__nav .calendar-pretty__nav-btn {
+  pointer-events: auto;
+}
+
+.calendar-pretty__nav-btn {
+  pointer-events: auto;
+  width: 2.25rem;
+  height: 2.25rem;
+  min-width: 2.25rem;
+  min-height: 2.25rem;
+  padding: 0;
+  margin: 0;
+  border: none;
+  border-radius: 50%;
+  background: transparent;
+  color: var(--cal-muted);
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  transition: background 0.2s ease, color 0.2s ease, transform 0.15s ease;
+}
+
+.calendar-pretty__nav-btn:hover:not(:disabled) {
+  background: var(--cal-accent-soft);
+  color: var(--cal-accent);
+}
+
+.calendar-pretty__nav-btn:active:not(:disabled) {
+  transform: scale(0.95);
+}
+
+.calendar-pretty__nav-btn:disabled {
+  opacity: 0.35;
+  cursor: not-allowed;
+}
+
+.calendar-pretty__weekdays {
+  margin-bottom: 0.5rem;
+}
+
+.calendar-pretty__weekday {
+  font-size: clamp(0.65rem, 2vw, 0.75rem);
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  color: var(--cal-muted);
+  opacity: 0.9;
+  padding: 0.35rem 0;
+  text-align: center;
+}
+
+.calendar-pretty__grid {
+  width: 100%;
+  border-collapse: collapse;
+  table-layout: fixed;
+}
+
+.calendar-pretty__week {
+  /* row */
+}
+
+.calendar-pretty__day {
+  width: calc(100% / 7);
+  padding: var(--cal-gap);
+  text-align: center;
+  vertical-align: middle;
+}
+
+.calendar-pretty__day-btn {
+  width: var(--cal-day-size);
+  height: var(--cal-day-size);
+  min-width: var(--cal-day-size);
+  min-height: var(--cal-day-size);
+  max-width: 100%;
+  margin: 0 auto;
+  padding: 0;
+  border: none;
+  border-radius: 50%;
+  background: transparent;
+  color: var(--cal-text);
+  font-size: clamp(0.85rem, 2.2vw, 1rem);
+  font-weight: 500;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: background 0.2s ease, color 0.2s ease, box-shadow 0.2s ease, transform 0.15s ease;
+}
+
+.calendar-pretty__day-btn:hover:not(:disabled) {
+  background: var(--cal-accent-soft);
+  color: var(--cal-accent);
+}
+
+.calendar-pretty__day-btn:active:not(:disabled) {
+  transform: scale(0.92);
+}
+
+/* Día de hoy (anillo, no relleno) */
+.calendar-pretty .rdp-today:not(.rdp-selected) .calendar-pretty__day-btn {
+  box-shadow: 0 0 0 2px var(--cal-accent);
+  color: var(--cal-accent);
+  font-weight: 600;
+}
+
+.calendar-pretty .rdp-today:not(.rdp-selected) .calendar-pretty__day-btn:hover {
+  background: var(--cal-accent-soft);
+}
+
+/* Día seleccionado */
+.calendar-pretty .rdp-selected .calendar-pretty__day-btn {
+  background: var(--cal-accent);
+  color: #fff;
+  font-weight: 600;
+}
+
+.calendar-pretty .rdp-selected .calendar-pretty__day-btn:hover {
+  background: var(--accent-hover);
+  color: #fff;
+}
+
+/* Días de otro mes */
+.calendar-pretty .rdp-outside .calendar-pretty__day-btn {
+  opacity: 0.4;
+  color: var(--cal-muted);
+}
+
+.calendar-pretty .rdp-outside .calendar-pretty__day-btn:hover {
+  opacity: 0.7;
+}
+
+.calendar-pretty .rdp-disabled .calendar-pretty__day-btn {
+  opacity: 0.35;
+  cursor: not-allowed;
+}
+
+/* Responsive: móvil */
+@media (max-width: 480px) {
+  .calendar-pretty {
+    --cal-day-size: 40px;
+    --cal-padding: 0.875rem;
+    --cal-gap: 2px;
+  }
+  .calendar-pretty__caption {
+    margin-bottom: 1rem;
+  }
+  .calendar-pretty__nav-btn {
+    width: 2rem;
+    height: 2rem;
+    min-width: 2rem;
+    min-height: 2rem;
+  }
 }
 
 body {

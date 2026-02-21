@@ -1,0 +1,25 @@
+# Base de datos Postgres local para desarrollo (nombre: proyectoBD).
+# No usa Supabase ni interfiere con él.
+# Uso: npm run db:local:up   y   npm run db:local:down
+# Conexión: postgresql://proyectoBD:proyectoBD_local@localhost:5433/proyectoBD
+
+services:
+  postgres:
+    image: docker.io/library/postgres:16-alpine
+    container_name: proyectoBD-postgres-local
+    environment:
+      POSTGRES_USER: proyectoBD
+      POSTGRES_PASSWORD: proyectoBD_local
+      POSTGRES_DB: proyectoBD
+    ports:
+      - "5433:5432"
+    volumes:
+      - proyectoBD_pgdata:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U proyectoBD -d proyectoBD"]
+      interval: 3s
+      timeout: 3s
+      retries: 5
+
+volumes:
+  proyectoBD_pgdata:

@@ -2,10 +2,11 @@
 import Layout from '../layouts/Layout.astro';
 import PlanDia from '../components/PlanDia.astro';
 import AiStudyBox from '../components/AiStudyBox.astro';
+import CalendarBasic from '../components/CalendarBasic';
 import { planDiaMock } from '../data/mock';
 ---
 <Layout title="Dashboard - MentorAI">
-  <h1>Dashboard</h1>
+  <h1 class="dashboard-title" id="dashboard-title">Dashboard</h1>
 
   <section class="calendar-section">
     <div class="section-header">
@@ -14,6 +15,7 @@ import { planDiaMock } from '../data/mock';
         <div class="calendar-toggle">
           <button type="button" class="btn btn-outline btn-icon" id="view-month">Mes</button>
           <button type="button" class="btn btn-outline btn-icon" id="view-week">Semana</button>
+          <button type="button" class="btn btn-outline btn-icon" id="view-day">Día</button>
         </div>
         <button type="button" class="btn btn-outline btn-icon" id="prev-month" aria-label="Mes anterior">◀</button>
         <span class="calendar-title" id="calendar-title"></span>
@@ -21,15 +23,52 @@ import { planDiaMock } from '../data/mock';
         <button type="button" class="btn btn-primary" id="btn-new-subject-calendar">Nueva materia</button>
       </div>
     </div>
-    <div class="calendar-grid" id="calendar-grid"></div>
-    <div class="calendar-week" id="calendar-week"></div>
+    <div class="calendar-wrapper card-calendar">
+      <div id="calendar-shadcn-container" class="calendar-shadcn">
+        <CalendarBasic client:load />
+      </div>
+      <div class="calendar-grid" id="calendar-grid" style="display: none;"></div>
+      <div class="calendar-week" id="calendar-week"></div>
+      <div class="calendar-day-view" id="calendar-day-view"></div>
+    </div>
   </section>
+
+  <!-- Menú al tocar un día (estilo Google Calendar): ver actividad o agregar -->
+  <div class="modal" id="day-menu-modal" aria-hidden="true">
+    <div class="modal-card day-menu-card">
+      <div class="modal-header">
+        <h3 id="day-menu-title">Día</h3>
+        <button type="button" class="modal-close" data-close="day-menu-modal" aria-label="Cerrar">✕</button>
+      </div>
+      <div class="day-menu-activities" id="day-menu-activities"></div>
+      <div class="day-menu-actions">
+        <button type="button" class="btn btn-outline day-menu-btn" id="day-menu-events">Ver día completo</button>
+        <button type="button" class="btn btn-outline day-menu-btn" id="day-menu-new-subject">Nueva materia</button>
+        <button type="button" class="btn btn-primary day-menu-btn" id="day-menu-new-note">Crear nota</button>
+      </div>
+    </div>
+  </div>
 
   <section class="materias-section">
     <div class="section-header">
       <h2 class="section-title">Materias registradas</h2>
+      <button type="button" class="btn btn-outline btn-icon" id="view-list-by-priority" title="Ver lista por prioridad">Lista por prioridad</button>
     </div>
     <div class="materias-grid" id="subjects-grid"></div>
+    <div class="materias-list-by-priority" id="subjects-list-priority" style="display: none;">
+      <div class="priority-group" data-priority="alta">
+        <h4 class="priority-group-title alta">Alta prioridad</h4>
+        <div class="priority-group-cards" id="list-alta"></div>
+      </div>
+      <div class="priority-group" data-priority="media">
+        <h4 class="priority-group-title media">Media prioridad</h4>
+        <div class="priority-group-cards" id="list-media"></div>
+      </div>
+      <div class="priority-group" data-priority="baja">
+        <h4 class="priority-group-title baja">Baja prioridad</h4>
+        <div class="priority-group-cards" id="list-baja"></div>
+      </div>
+    </div>
     <p class="empty-state" id="subjects-empty">Aún no has registrado materias.</p>
   </section>
 
@@ -63,7 +102,15 @@ import { planDiaMock } from '../data/mock';
           </label>
           <label>
             Fecha de examen
-            <input type="date" name="examDate" />
+            <input type="date" name="examDate" id="input-exam-date" />
+          </label>
+          <label>
+            Hora inicio (opcional)
+            <input type="time" name="time_start_subject" />
+          </label>
+          <label>
+            Hora fin (opcional)
+            <input type="time" name="time_end_subject" />
           </label>
           <label>
             Prioridad
@@ -78,11 +125,19 @@ import { planDiaMock } from '../data/mock';
         <div class="form-block" data-type="event">
           <label>
             Título
-            <input type="text" name="title" placeholder="Ej: Sesión de repaso" />
+            <input type="text" name="title" placeholder="Ej: Sesión de repaso o Nota" />
           </label>
           <label>
             Fecha
-            <input type="date" name="date" />
+            <input type="date" name="date" id="input-event-date" />
+          </label>
+          <label>
+            Hora inicio (opcional)
+            <input type="time" name="time_start" />
+          </label>
+          <label>
+            Hora fin (opcional)
+            <input type="time" name="time_end" />
           </label>
           <label>
             Nota (opcional)
@@ -100,6 +155,12 @@ import { planDiaMock } from '../data/mock';
 </Layout>
 
 <style>
+  .dashboard-title {
+    margin: 0 0 1rem;
+    font-size: 1.5rem;
+    font-weight: 700;
+    color: var(--text);
+  }
   .materias-section {
     margin-bottom: 2.5rem;
   }
@@ -120,18 +181,18 @@ import { planDiaMock } from '../data/mock';
     margin-top: 1rem;
     display: none;
   }
-  .materia-card-actions {
+  .materias-section :global(.materia-card-actions) {
     margin-top: 0.75rem;
     padding-top: 0.75rem;
     border-top: 1px solid #eee;
   }
-  .btn-delete-materia {
+  .materias-section :global(.btn-delete-materia) {
     padding: 0.4rem 0.75rem;
     font-size: 0.85rem;
     color: var(--priority-alta);
     border-color: rgba(229, 115, 115, 0.5);
   }
-  .btn-delete-materia:hover {
+  .materias-section :global(.btn-delete-materia:hover) {
     background: rgba(229, 115, 115, 0.1);
   }
   .calendar-section {
@@ -158,77 +219,256 @@ import { planDiaMock } from '../data/mock';
     padding: 0.4rem 0.75rem;
     min-height: auto;
   }
-  .calendar-grid {
+  .calendar-wrapper.card-calendar {
     margin-top: 1rem;
+    background: var(--card);
+    border-radius: 16px;
+    padding: 1.25rem;
+    box-shadow: var(--shadow);
+    border: 1px solid rgba(0, 0, 0, 0.06);
+    width: 100%;
+    box-sizing: border-box;
+  }
+  .calendar-shadcn {
+    width: 100%;
+    max-width: 100%;
+    box-sizing: border-box;
+  }
+  .calendar-grid {
     display: grid;
     grid-template-columns: repeat(7, 1fr);
-    gap: 0.5rem;
+    gap: 6px;
   }
   .calendar-week {
-    margin-top: 1rem;
     display: none;
     gap: 0.75rem;
+    grid-template-columns: repeat(7, 1fr);
   }
   .calendar-week.open {
     display: grid;
   }
-  .week-day {
+  .calendar-day-view {
+    display: none;
+    margin-top: 0.5rem;
+  }
+  .calendar-day-view.open {
+    display: block;
+  }
+  .calendar-day-view .single-day-card {
     background: var(--card);
     border-radius: 12px;
-    padding: 1rem;
+    padding: 1.25rem;
     box-shadow: var(--shadow);
+    border: 1px solid rgba(0, 0, 0, 0.06);
   }
-  .week-day h4 {
+  .calendar-day-view .day-actions-inline {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.5rem;
+    margin-bottom: 1rem;
+  }
+  .calendar-wrapper :global(.week-day) {
+    background: var(--bg);
+    border-radius: 12px;
+    padding: 1rem;
+    border: 1px solid rgba(0, 0, 0, 0.06);
+  }
+  .calendar-wrapper :global(.week-day h4) {
     margin: 0 0 0.5rem;
     font-size: 1rem;
   }
-  .calendar-day {
-    background: var(--card);
+  .calendar-wrapper :global(.calendar-day) {
+    background: var(--bg);
     border-radius: 10px;
     padding: 0.5rem;
-    min-height: 110px;
-    box-shadow: var(--shadow);
+    min-height: 100px;
+    border: 1px solid rgba(0, 0, 0, 0.05);
     display: grid;
     grid-template-rows: auto 1fr;
     gap: 0.35rem;
+    cursor: pointer;
+    transition: background 0.15s, box-shadow 0.15s;
   }
-  .calendar-day header {
+  .calendar-wrapper :global(.calendar-day:hover) {
+    background: rgba(74, 144, 217, 0.06);
+    box-shadow: 0 0 0 2px rgba(74, 144, 217, 0.2);
+  }
+  .calendar-wrapper :global(.calendar-day.has-items) {
+    background: rgba(74, 144, 217, 0.04);
+    border-color: rgba(74, 144, 217, 0.15);
+  }
+  .calendar-wrapper :global(.calendar-day header) {
     font-weight: 600;
     color: var(--text-muted);
     font-size: 0.85rem;
   }
-  .calendar-items {
+  .calendar-wrapper :global(.calendar-items) {
     display: grid;
-    gap: 0.25rem;
+    gap: 0.35rem;
     font-size: 0.72rem;
   }
-  .calendar-item {
-    background: rgba(74, 144, 217, 0.08);
-    padding: 0.2rem 0.35rem;
-    border-radius: 4px;
+  /* :global() necesario: los ítems se crean con JS y no tienen el scope de Astro */
+  .calendar-wrapper :global(.calendar-item) {
+    background: rgba(74, 144, 217, 0.12);
+    padding: 0.35rem 0.5rem;
+    border-radius: 8px;
     cursor: pointer;
-    border-left: 3px solid rgba(74, 144, 217, 0.4);
+    border: 1px solid rgba(74, 144, 217, 0.35);
     line-height: 1.25;
+    font-weight: 500;
   }
-  .calendar-item.event {
-    background: rgba(255, 183, 77, 0.1);
-    border-left-color: rgba(255, 183, 77, 0.5);
+  .calendar-wrapper :global(.calendar-item.event) {
+    background: rgba(251, 191, 36, 0.15);
+    border-color: rgba(251, 191, 36, 0.5);
   }
-  .calendar-item[data-priority="alta"] {
-    background: rgba(220, 38, 38, 0.08);
-    border-left-color: rgba(220, 38, 38, 0.5);
+  .calendar-wrapper :global(.calendar-item.priority-alta),
+  .calendar-wrapper :global(.calendar-item[data-priority="alta"]) {
+    background: rgba(220, 38, 38, 0.18);
+    border: 1px solid rgba(220, 38, 38, 0.45);
+    color: #991b1b;
   }
-  .calendar-item[data-priority="media"] {
-    background: rgba(234, 179, 8, 0.08);
-    border-left-color: rgba(234, 179, 8, 0.5);
+  .calendar-wrapper :global(.calendar-item.priority-media),
+  .calendar-wrapper :global(.calendar-item[data-priority="media"]) {
+    background: rgba(234, 179, 8, 0.2);
+    border: 1px solid rgba(234, 179, 8, 0.5);
+    color: #854d0e;
   }
-  .calendar-item[data-priority="baja"] {
-    background: rgba(22, 163, 74, 0.08);
-    border-left-color: rgba(22, 163, 74, 0.5);
+  .calendar-wrapper :global(.calendar-item.priority-baja),
+  .calendar-wrapper :global(.calendar-item[data-priority="baja"]) {
+    background: rgba(22, 163, 74, 0.18);
+    border: 1px solid rgba(22, 163, 74, 0.45);
+    color: #166534;
   }
-  .calendar-item-more {
-    border-left-color: transparent;
+  .calendar-wrapper :global(.calendar-item-more) {
+    border: 1px dashed rgba(0, 0, 0, 0.15);
     background: rgba(0, 0, 0, 0.05);
+    color: var(--text-muted);
+  }
+  .day-menu-card {
+    max-width: 340px;
+  }
+  .day-menu-actions {
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+    margin-top: 0.75rem;
+  }
+  .day-menu-btn {
+    width: 100%;
+    justify-content: center;
+  }
+  .day-menu-activities {
+    margin: 0.75rem 0;
+    max-height: 200px;
+    overflow-y: auto;
+  }
+  .day-menu-empty {
+    margin: 0;
+    font-size: 0.9rem;
+    color: var(--text-muted);
+  }
+  .day-menu-activity {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    width: 100%;
+    padding: 0.5rem 0.75rem;
+    margin-bottom: 0.35rem;
+    border: none;
+    border-radius: 8px;
+    background: var(--bg);
+    cursor: pointer;
+    font: inherit;
+    text-align: left;
+  }
+  .day-menu-activity:hover {
+    background: rgba(74, 144, 217, 0.1);
+  }
+  .day-menu-activity-dot {
+    width: 10px;
+    height: 10px;
+    border-radius: 50%;
+    flex-shrink: 0;
+  }
+  .day-menu-activity.dot-alta .day-menu-activity-dot { background: #dc2626; }
+  .day-menu-activity.dot-media .day-menu-activity-dot { background: #eab308; }
+  .day-menu-activity.dot-baja .day-menu-activity-dot { background: #16a34a; }
+  .day-menu-activity.dot-event .day-menu-activity-dot { background: #f59e0b; }
+  .day-menu-activity-time {
+    font-size: 0.8rem;
+    color: var(--text-muted);
+    flex-shrink: 0;
+  }
+  .day-menu-activity-label {
+    font-weight: 500;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+  .calendar-wrapper :global(.calendar-dots) {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 3px;
+    justify-content: center;
+    align-items: center;
+    min-height: 1.25rem;
+  }
+  .calendar-wrapper :global(.cal-dot) {
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+    flex-shrink: 0;
+  }
+  .calendar-wrapper :global(.cal-dot-alta) { background: #dc2626; }
+  .calendar-wrapper :global(.cal-dot-media) { background: #eab308; }
+  .calendar-wrapper :global(.cal-dot-baja) { background: #16a34a; }
+  .calendar-wrapper :global(.cal-dot-event) { background: #f59e0b; }
+  .calendar-wrapper :global(.day-activity-time) {
+    font-size: 0.7rem;
+    color: var(--text-muted);
+    margin-right: 0.25rem;
+  }
+  .calendar-wrapper :global(.day-activity-label) {
+    font-weight: 500;
+  }
+  /* :global() necesario: las tarjetas se crean con JS */
+  .materias-section :global(.materia-card.prioridad-alta),
+  .materias-section :global(.materia-card[data-priority="alta"]) {
+    border-left: 5px solid #dc2626;
+    background: linear-gradient(to right, rgba(220, 38, 38, 0.08), var(--card));
+  }
+  .materias-section :global(.materia-card.prioridad-media),
+  .materias-section :global(.materia-card[data-priority="media"]) {
+    border-left: 5px solid #eab308;
+    background: linear-gradient(to right, rgba(234, 179, 8, 0.1), var(--card));
+  }
+  .materias-section :global(.materia-card.prioridad-baja),
+  .materias-section :global(.materia-card[data-priority="baja"]) {
+    border-left: 5px solid #16a34a;
+    background: linear-gradient(to right, rgba(22, 163, 74, 0.08), var(--card));
+  }
+  .materias-section :global(.materia-card .badge.prioridad-alta) { background: #dc2626; color: #fff; }
+  .materias-section :global(.materia-card .badge.prioridad-media) { background: #eab308; color: #1c1917; }
+  .materias-section :global(.materia-card .badge.prioridad-baja) { background: #16a34a; color: #fff; }
+  .materias-list-by-priority {
+    margin-top: 1rem;
+  }
+  .priority-group {
+    margin-bottom: 1.5rem;
+  }
+  .priority-group-title {
+    margin: 0 0 0.75rem;
+    font-size: 1rem;
+    font-weight: 600;
+    padding-bottom: 0.35rem;
+  }
+  .priority-group-title.alta { color: #dc2626; }
+  .priority-group-title.media { color: #b45309; }
+  .priority-group-title.baja { color: #16a34a; }
+  .priority-group-cards {
+    display: flex;
+    flex-direction: column;
+    gap: 0.75rem;
   }
   .plan-section {
     margin-top: 2rem;
@@ -305,19 +545,90 @@ import { planDiaMock } from '../data/mock';
     color: var(--text-muted);
     font-weight: normal;
   }
+
+  /* Responsive: calendario y secciones */
+  @media (max-width: 768px) {
+    .dashboard-title {
+      font-size: 1.25rem;
+    }
+    .section-header {
+      flex-direction: column;
+      align-items: flex-start;
+    }
+    .calendar-actions {
+      width: 100%;
+      flex-wrap: wrap;
+      gap: 0.5rem;
+    }
+    .calendar-toggle {
+      padding-right: 0.5rem;
+      border-right: 1px solid #ddd;
+    }
+    .calendar-title {
+      min-width: 120px;
+      font-size: 0.95rem;
+    }
+    .calendar-wrapper.card-calendar {
+      padding: 0.75rem;
+      border-radius: 12px;
+    }
+    .calendar-grid {
+      gap: 4px;
+    }
+    .calendar-wrapper :global(.calendar-day) {
+      min-height: 72px;
+      padding: 0.35rem;
+    }
+    .calendar-wrapper :global(.calendar-day header) {
+      font-size: 0.75rem;
+    }
+    .materias-grid {
+      grid-template-columns: 1fr;
+    }
+    .day-menu-card {
+      max-width: 92vw;
+    }
+  }
+  @media (max-width: 480px) {
+    .calendar-actions {
+      flex-direction: column;
+      align-items: stretch;
+    }
+    .calendar-toggle {
+      border-right: none;
+      border-bottom: 1px solid #eee;
+      padding-bottom: 0.5rem;
+    }
+    .calendar-wrapper :global(.calendar-day) {
+      min-height: 64px;
+    }
+    .calendar-wrapper :global(.cal-dot) {
+      width: 6px;
+      height: 6px;
+    }
+  }
 </style>
 
 <script>
   const subjectsGrid = document.getElementById('subjects-grid');
   const subjectsEmpty = document.getElementById('subjects-empty');
   const calendarGrid = document.getElementById('calendar-grid');
+  const calendarShadcnContainer = document.getElementById('calendar-shadcn-container');
   const calendarWeek = document.getElementById('calendar-week');
   const calendarTitle = document.getElementById('calendar-title');
   const prevMonthBtn = document.getElementById('prev-month');
   const nextMonthBtn = document.getElementById('next-month');
   const viewMonthBtn = document.getElementById('view-month');
   const viewWeekBtn = document.getElementById('view-week');
+  const viewDayBtn = document.getElementById('view-day');
+  const calendarDayView = document.getElementById('calendar-day-view');
   const newSubjectCalendarBtn = document.getElementById('btn-new-subject-calendar');
+  const dayMenuModal = document.getElementById('day-menu-modal');
+  const dayMenuTitle = document.getElementById('day-menu-title');
+  const viewListByPriorityBtn = document.getElementById('view-list-by-priority');
+  const subjectsListPriority = document.getElementById('subjects-list-priority');
+  let selectedDayForMenu = null;
+  let listByPriorityMode = false;
   const subjectModal = document.getElementById('subject-modal');
   const subjectForm = document.getElementById('subject-form');
   const subjectModalTitle = document.getElementById('subject-modal-title');
@@ -338,6 +649,39 @@ import { planDiaMock } from '../data/mock';
   let currentDate = new Date();
   let viewMode = 'month';
 
+  // Título: día actual ej. "Lunes 16 de febrero" — ejecutar cuando el DOM esté listo
+  function setDashboardTitle() {
+    const el = document.getElementById('dashboard-title');
+    if (!el) return;
+    const d = new Date();
+    const str = d.toLocaleDateString('es-ES', { weekday: 'long', day: 'numeric', month: 'long' });
+    el.textContent = str.charAt(0).toUpperCase() + str.slice(1);
+  }
+
+  // Fecha mínima = hoy (no permitir crear actividades en fechas pasadas)
+  function setMinDateInputs() {
+    const today = new Date().toISOString().slice(0, 10);
+    const examInput = document.getElementById('input-exam-date');
+    const eventInput = document.getElementById('input-event-date');
+    if (examInput) examInput.min = today;
+    if (eventInput) eventInput.min = today;
+  }
+
+  function initDashboardUI() {
+    setDashboardTitle();
+    setMinDateInputs();
+    if (viewMode === 'month') {
+      if (prevMonthBtn) prevMonthBtn.style.display = 'none';
+      if (nextMonthBtn) nextMonthBtn.style.display = 'none';
+      if (calendarTitle) calendarTitle.style.display = 'none';
+    }
+  }
+  if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', initDashboardUI);
+  } else {
+    initDashboardUI();
+  }
+
   function openModal(modal) {
     if (!modal) return;
     modal.classList.add('open');
@@ -357,6 +701,7 @@ import { planDiaMock } from '../data/mock';
 
   function openNewItemModal() {
     if (!subjectForm) return;
+    setMinDateInputs();
     subjectForm.reset();
     const idField = subjectForm.querySelector('[name="id"]');
     const typeField = subjectForm.querySelector('[name="type"]');
@@ -382,38 +727,101 @@ import { planDiaMock } from '../data/mock';
       return;
     }
     subjectsEmpty.style.display = 'none';
+    const priority = (s) => normPriority(s.priority);
     subjects.forEach((subject) => {
+      const pri = priority(subject);
       const card = document.createElement('div');
-      card.className = 'materia-card';
+      card.className = `materia-card prioridad-${pri}`;
       card.dataset.id = subject.id;
+      card.dataset.priority = pri;
       card.innerHTML = `
         <div class="materia-card-header">
           <h3 class="materia-nombre">${subject.name}</h3>
-          <span class="badge prioridad-${subject.priority}">${subject.priority}</span>
+          <span class="badge prioridad-${pri}">${subject.priority}</span>
         </div>
-        <p class="materia-fecha">📅 Examen: ${subject.exam_date || 'Sin fecha'}</p>
+        <p class="materia-fecha">📅 Fecha a realizar: ${subject.exam_date || 'Sin fecha'}</p>
         <div class="materia-card-actions">
           <button type="button" class="btn btn-outline btn-sm btn-delete-materia" data-id="${subject.id}" aria-label="Eliminar materia">Eliminar</button>
         </div>
       `;
       subjectsGrid.appendChild(card);
     });
+    if (listByPriorityMode) renderListByPriority();
   }
 
+  function renderListByPriority() {
+    const listAlta = document.getElementById('list-alta');
+    const listMedia = document.getElementById('list-media');
+    const listBaja = document.getElementById('list-baja');
+    if (!listAlta || !listMedia || !listBaja) return;
+    const pri = (s) => normPriority(s.priority);
+    const alta = subjects.filter((s) => pri(s) === 'alta');
+    const media = subjects.filter((s) => pri(s) === 'media');
+    const baja = subjects.filter((s) => pri(s) === 'baja');
+    function renderGroup(arr, container) {
+      container.innerHTML = '';
+      arr.forEach((subject) => {
+        const p = pri(subject);
+        const card = document.createElement('div');
+        card.className = `materia-card prioridad-${p}`;
+        card.dataset.id = subject.id;
+        card.dataset.priority = p;
+        card.innerHTML = `
+          <div class="materia-card-header">
+            <h3 class="materia-nombre">${subject.name}</h3>
+            <span class="badge prioridad-${p}">${subject.priority}</span>
+          </div>
+          <p class="materia-fecha">📅 Fecha a realizar: ${subject.exam_date || 'Sin fecha'}</p>
+          <div class="materia-card-actions">
+            <button type="button" class="btn btn-outline btn-sm btn-delete-materia" data-id="${subject.id}">Eliminar</button>
+          </div>
+        `;
+        container.appendChild(card);
+      });
+    }
+    renderGroup(alta, listAlta);
+    renderGroup(media, listMedia);
+    renderGroup(baja, listBaja);
+  }
+
+  function normPriority(p) {
+    const v = (p || 'media').toString().toLowerCase();
+    return v === 'alta' || v === 'baja' ? v : 'media';
+  }
+  function parseEventTime(note) {
+    const s = (note || '').toString();
+    const m = s.match(/Inicio:\s*(\d{1,2}:\d{2})\s*[—\-]\s*Fin:\s*(\d{1,2}:\d{2})/);
+    return m ? { start: m[1], end: m[2] } : { start: '', end: '' };
+  }
   function getItemsForDate(dateKey) {
     const daySubjects = subjects.filter((s) => s.exam_date === dateKey).map((s) => ({
       id: s.id,
       label: s.name,
       type: 'subject',
-      priority: s.priority || 'media'
+      priority: normPriority(s.priority),
+      timeStart: (s.time_start || '').toString().trim(),
+      timeEnd: (s.time_end || '').toString().trim()
     }));
-    const dayEvents = events.filter((e) => e.date === dateKey).map((e) => ({
-      id: e.id,
-      label: e.title,
-      type: 'event',
-      priority: ''
-    }));
+    const dayEvents = events.filter((e) => e.date === dateKey).map((e) => {
+      const t = parseEventTime(e.note);
+      return {
+        id: e.id,
+        label: e.title,
+        type: 'event',
+        priority: '',
+        timeStart: t.start,
+        timeEnd: t.end
+      };
+    });
     return [...daySubjects, ...dayEvents];
+  }
+  function formatTimeRange(item) {
+    const s = item.timeStart || '';
+    const e = item.timeEnd || '';
+    if (s && e) return `${s} - ${e}`;
+    if (s) return `Desde ${s}`;
+    if (e) return `Hasta ${e}`;
+    return '';
   }
 
   function renderCalendar() {
@@ -453,18 +861,122 @@ import { planDiaMock } from '../data/mock';
       const key = formatDateKey(date);
       const items = getItemsForDate(key);
       const cell = document.createElement('div');
-      cell.className = 'calendar-day';
-      const itemsHtml = items
-        .slice(0, 3)
+      cell.className = 'calendar-day' + (items.length > 0 ? ' has-items' : '');
+      cell.dataset.date = key;
+      const dotsHtml = items
         .map((item) => {
-          const priorityAttr = item.priority ? ` data-priority="${item.priority}"` : '';
-          return `<div class="calendar-item ${item.type === 'event' ? 'event' : ''}" data-id="${item.id}" data-type="${item.type}"${priorityAttr}>${item.label}</div>`;
+          const pri = item.priority || 'event';
+          const dotClass = item.type === 'event' ? ' cal-dot-event' : ` cal-dot cal-dot-${pri}`;
+          return `<span class="cal-dot${dotClass}" data-id="${item.id}" data-type="${item.type}" title="${item.label}"></span>`;
         })
         .join('');
-      const more = items.length > 3 ? `<div class="calendar-item calendar-item-more">+${items.length - 3} más</div>` : '';
-      cell.innerHTML = `<header>${day}</header><div class="calendar-items">${itemsHtml}${more}</div>`;
+      cell.innerHTML = `<header>${day}</header><div class="calendar-dots">${dotsHtml}</div>`;
       calendarGrid.appendChild(cell);
     }
+  }
+
+  function renderDay() {
+    if (!calendarDayView || !calendarTitle) return;
+    calendarDayView.innerHTML = '';
+    const d = new Date(currentDate);
+    const key = formatDateKey(d);
+    calendarTitle.textContent = d.toLocaleDateString('es-ES', { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' });
+    const items = getItemsForDate(key);
+    const itemsHtml = items
+      .map((item) => {
+        const timeStr = formatTimeRange(item);
+        const pri = item.priority || '';
+        const priorityClass = pri ? ` priority-${pri}` : '';
+        return `<div class="calendar-item day-activity${item.type === 'event' ? ' event' : ''}${priorityClass}" data-id="${item.id}" data-type="${item.type}">
+          <span class="day-activity-time">${timeStr ? timeStr + ' · ' : ''}</span>
+          <span class="day-activity-label">${item.label}</span>
+        </div>`;
+      })
+      .join('');
+    const dayCard = document.createElement('div');
+    dayCard.className = 'single-day-card';
+    dayCard.innerHTML = `
+      <div class="day-actions-inline">
+        <button type="button" class="btn btn-outline btn-sm" id="day-view-events">Ver eventos</button>
+        <button type="button" class="btn btn-outline btn-sm" id="day-view-new-subject">Nueva materia</button>
+        <button type="button" class="btn btn-primary btn-sm" id="day-view-new-note">Crear nota</button>
+      </div>
+      <div class="calendar-items day-activities-list">${itemsHtml || '<span class="empty-state">Sin actividades este día</span>'}</div>
+    `;
+    calendarDayView.appendChild(dayCard);
+    calendarDayView.classList.add('open');
+    document.getElementById('day-view-events')?.addEventListener('click', () => { openDayMenu(d); });
+    document.getElementById('day-view-new-subject')?.addEventListener('click', openNewItemModal);
+    document.getElementById('day-view-new-note')?.addEventListener('click', () => openNewNoteForDate(key));
+    dayCard.querySelectorAll('.calendar-item').forEach((el) => {
+      el.addEventListener('click', (e) => {
+        e.stopPropagation();
+        const id = el.getAttribute('data-id');
+        const type = el.getAttribute('data-type');
+        if (type === 'subject') {
+          const subject = subjects.find((s) => s.id === id);
+          if (subject) openSubjectModal(subject);
+        } else {
+          const event = events.find((ev) => ev.id === id);
+          if (event) openEventModal(event);
+        }
+      });
+    });
+  }
+
+  function openDayMenu(date) {
+    selectedDayForMenu = date;
+    if (dayMenuTitle) dayMenuTitle.textContent = date.toLocaleDateString('es-ES', { weekday: 'long', day: 'numeric', month: 'long' });
+    const listEl = document.getElementById('day-menu-activities');
+    if (listEl) {
+      const key = formatDateKey(date);
+      const items = getItemsForDate(key);
+      if (items.length === 0) {
+        listEl.innerHTML = '<p class="day-menu-empty">Sin actividades este día</p>';
+      } else {
+        listEl.innerHTML = items
+          .map((item) => {
+            const timeStr = formatTimeRange(item);
+            const pri = item.priority || '';
+            const dotClass = item.type === 'event' ? 'dot-event' : `dot-${pri}`;
+            return `<button type="button" class="day-menu-activity ${dotClass}" data-id="${item.id}" data-type="${item.type}">
+              <span class="day-menu-activity-dot"></span>
+              <span class="day-menu-activity-time">${timeStr ? timeStr + ' · ' : ''}</span>
+              <span class="day-menu-activity-label">${item.label}</span>
+            </button>`;
+          })
+          .join('');
+        listEl.querySelectorAll('.day-menu-activity').forEach((btn) => {
+          btn.addEventListener('click', () => {
+            const id = btn.dataset.id;
+            const type = btn.dataset.type;
+            closeModal(dayMenuModal);
+            if (type === 'subject') {
+              const s = subjects.find((x) => x.id === id);
+              if (s) openSubjectModal(s);
+            } else {
+              const ev = events.find((x) => x.id === id);
+              if (ev) openEventModal(ev);
+            }
+          });
+        });
+      }
+    }
+    openModal(dayMenuModal);
+  }
+
+  function openNewNoteForDate(dateKey) {
+    if (!subjectForm) return;
+    setMinDateInputs();
+    subjectForm.reset();
+    const typeField = subjectForm.querySelector('[name="type"]');
+    const dateField = subjectForm.querySelector('[name="date"]');
+    if (typeField instanceof HTMLSelectElement) typeField.value = 'event';
+    if (dateField instanceof HTMLInputElement) dateField.value = dateKey;
+    setFormMode('event');
+    if (subjectDelete) subjectDelete.style.display = 'none';
+    if (subjectModalTitle) subjectModalTitle.textContent = 'Crear nota (este día)';
+    openModal(subjectModal);
   }
 
   function renderWeek() {
@@ -487,13 +999,18 @@ import { planDiaMock } from '../data/mock';
       dayBox.className = 'week-day';
       const itemsHtml = items
         .map((item) => {
-          const priorityAttr = item.priority ? ` data-priority="${item.priority}"` : '';
-          return `<div class="calendar-item ${item.type === 'event' ? 'event' : ''}" data-id="${item.id}" data-type="${item.type}"${priorityAttr}>${item.label}</div>`;
+          const timeStr = formatTimeRange(item);
+          const pri = item.priority || '';
+          const priorityClass = pri ? ` priority-${pri}` : '';
+          return `<div class="calendar-item day-activity${item.type === 'event' ? ' event' : ''}${priorityClass}" data-id="${item.id}" data-type="${item.type}">
+            <span class="day-activity-time">${timeStr ? timeStr + ' · ' : ''}</span>
+            <span class="day-activity-label">${item.label}</span>
+          </div>`;
         })
         .join('');
       dayBox.innerHTML = `
         <h4>${current.toLocaleDateString('es-ES', { weekday: 'long', day: 'numeric' })}</h4>
-        <div class="calendar-items">${itemsHtml || '<span class="empty-state">Sin eventos</span>'}</div>
+        <div class="calendar-items day-activities-list">${itemsHtml || '<span class="empty-state">Sin eventos</span>'}</div>
       `;
       calendarWeek.appendChild(dayBox);
     }
@@ -521,38 +1038,65 @@ import { planDiaMock } from '../data/mock';
     renderSubjects();
     if (viewMode === 'month') renderCalendar();
     if (viewMode === 'week') renderWeek();
+    if (viewMode === 'day') renderDay();
   }
 
   prevMonthBtn?.addEventListener('click', () => {
     if (viewMode === 'month') {
       currentDate = new Date(currentDate.getFullYear(), currentDate.getMonth() - 1, 1);
       renderCalendar();
-    } else {
+    } else if (viewMode === 'week') {
       currentDate = new Date(currentDate.getFullYear(), currentDate.getMonth(), currentDate.getDate() - 7);
       renderWeek();
+    } else {
+      currentDate = new Date(currentDate.getFullYear(), currentDate.getMonth(), currentDate.getDate() - 1);
+      renderDay();
     }
   });
   nextMonthBtn?.addEventListener('click', () => {
     if (viewMode === 'month') {
       currentDate = new Date(currentDate.getFullYear(), currentDate.getMonth() + 1, 1);
       renderCalendar();
-    } else {
+    } else if (viewMode === 'week') {
       currentDate = new Date(currentDate.getFullYear(), currentDate.getMonth(), currentDate.getDate() + 7);
       renderWeek();
+    } else {
+      currentDate = new Date(currentDate.getFullYear(), currentDate.getMonth(), currentDate.getDate() + 1);
+      renderDay();
     }
   });
 
   viewMonthBtn?.addEventListener('click', () => {
     viewMode = 'month';
-    if (calendarGrid) calendarGrid.style.display = 'grid';
+    if (calendarShadcnContainer) calendarShadcnContainer.style.display = 'block';
+    if (calendarGrid) calendarGrid.style.display = 'none';
     if (calendarWeek) calendarWeek.classList.remove('open');
-    renderCalendar();
+    if (calendarDayView) calendarDayView.classList.remove('open');
+    if (prevMonthBtn) prevMonthBtn.style.display = 'none';
+    if (nextMonthBtn) nextMonthBtn.style.display = 'none';
+    if (calendarTitle) calendarTitle.style.display = 'none';
   });
   viewWeekBtn?.addEventListener('click', () => {
     viewMode = 'week';
+    if (calendarShadcnContainer) calendarShadcnContainer.style.display = 'none';
     if (calendarGrid) calendarGrid.style.display = 'none';
     if (calendarWeek) calendarWeek.classList.add('open');
+    if (calendarDayView) calendarDayView.classList.remove('open');
+    if (prevMonthBtn) prevMonthBtn.style.display = '';
+    if (nextMonthBtn) nextMonthBtn.style.display = '';
+    if (calendarTitle) calendarTitle.style.display = '';
     renderWeek();
+  });
+  viewDayBtn?.addEventListener('click', () => {
+    viewMode = 'day';
+    if (calendarShadcnContainer) calendarShadcnContainer.style.display = 'none';
+    if (calendarGrid) calendarGrid.style.display = 'none';
+    if (calendarWeek) calendarWeek.classList.remove('open');
+    if (calendarDayView) calendarDayView.classList.add('open');
+    if (prevMonthBtn) prevMonthBtn.style.display = '';
+    if (nextMonthBtn) nextMonthBtn.style.display = '';
+    if (calendarTitle) calendarTitle.style.display = '';
+    renderDay();
   });
 
   function setFormMode(type) {
@@ -576,22 +1120,56 @@ import { planDiaMock } from '../data/mock';
 
   subjectForm?.addEventListener('submit', async (e) => {
     e.preventDefault();
-    if (!userId || !subjectForm || !subjectStatus) return;
+    if (!subjectForm || !subjectStatus) return;
+    if (!userId) {
+      subjectStatus.textContent = 'Debes iniciar sesión para guardar.';
+      return;
+    }
     const form = subjectForm;
     const formData = new FormData(form);
-    subjectStatus.textContent = 'Guardando materia...';
-
     const type = String(formData.get('type') || 'subject');
+
+    if (type === 'subject') {
+      const name = String(formData.get('name') || '').trim();
+      const examDate = String(formData.get('examDate') || '');
+      if (!name) {
+        subjectStatus.textContent = 'Escribe el nombre de la materia.';
+        return;
+      }
+      if (!examDate) {
+        subjectStatus.textContent = 'Elige la fecha de examen.';
+        return;
+      }
+    } else {
+      const date = String(formData.get('date') || '');
+      if (!date) {
+        subjectStatus.textContent = 'Elige la fecha del evento.';
+        return;
+      }
+    }
+
+    subjectStatus.textContent = 'Guardando...';
+    let note = String(formData.get('note') || '');
+    const timeStart = String(formData.get('time_start') || '').trim();
+    const timeEnd = String(formData.get('time_end') || '').trim();
+    if (type === 'event' && (timeStart || timeEnd)) {
+      const part = [timeStart && `Inicio: ${timeStart}`, timeEnd && `Fin: ${timeEnd}`].filter(Boolean).join(' — ');
+      note = note ? `${note} | ${part}` : part;
+    }
+    const timeStartSubject = String(formData.get('time_start_subject') || '').trim();
+    const timeEndSubject = String(formData.get('time_end_subject') || '').trim();
     const payload = {
       id: String(formData.get('id') || ''),
       userId,
       name: String(formData.get('name') || ''),
       examDate: String(formData.get('examDate') || ''),
+      time_start: type === 'subject' ? timeStartSubject : undefined,
+      time_end: type === 'subject' ? timeEndSubject : undefined,
       priority: String(formData.get('priority') || 'media'),
       color: String(formData.get('color') || ''),
       title: String(formData.get('title') || ''),
       date: String(formData.get('date') || ''),
-      note: String(formData.get('note') || '')
+      note
     };
 
     try {
@@ -620,6 +1198,7 @@ import { planDiaMock } from '../data/mock';
       }
       if (viewMode === 'month') renderCalendar();
       if (viewMode === 'week') renderWeek();
+      if (viewMode === 'day') renderDay();
       subjectStatus.textContent = type === 'event' ? 'Evento guardado.' : 'Materia guardada.';
       form.reset();
       closeModal(subjectModal);
@@ -651,6 +1230,7 @@ import { planDiaMock } from '../data/mock';
       }
       if (viewMode === 'month') renderCalendar();
       if (viewMode === 'week') renderWeek();
+      if (viewMode === 'day') renderDay();
       subjectStatus.textContent = type === 'event' ? 'Evento eliminado.' : 'Materia eliminada.';
       subjectForm.reset();
       closeModal(subjectModal);
@@ -665,6 +1245,8 @@ import { planDiaMock } from '../data/mock';
     const typeField = subjectForm.querySelector('[name="type"]');
     const nameField = subjectForm.querySelector('[name="name"]');
     const examDateField = subjectForm.querySelector('[name="examDate"]');
+    const timeStartSubjField = subjectForm.querySelector('[name="time_start_subject"]');
+    const timeEndSubjField = subjectForm.querySelector('[name="time_end_subject"]');
     const priorityField = subjectForm.querySelector('[name="priority"]');
     const colorField = subjectForm.querySelector('[name="color"]');
     const titleField = subjectForm.querySelector('[name="title"]');
@@ -675,6 +1257,8 @@ import { planDiaMock } from '../data/mock';
     if (typeField instanceof HTMLSelectElement) typeField.value = 'subject';
     if (nameField instanceof HTMLInputElement) nameField.value = subject?.name || '';
     if (examDateField instanceof HTMLInputElement) examDateField.value = subject?.exam_date || '';
+    if (timeStartSubjField instanceof HTMLInputElement) timeStartSubjField.value = subject?.time_start || '';
+    if (timeEndSubjField instanceof HTMLInputElement) timeEndSubjField.value = subject?.time_end || '';
     if (priorityField instanceof HTMLSelectElement) priorityField.value = subject?.priority || 'media';
     if (colorField instanceof HTMLSelectElement) colorField.value = subject?.color || '';
     if (titleField instanceof HTMLInputElement) titleField.value = '';
@@ -692,15 +1276,28 @@ import { planDiaMock } from '../data/mock';
     const titleField = subjectForm.querySelector('[name="title"]');
     const dateField = subjectForm.querySelector('[name="date"]');
     const noteField = subjectForm.querySelector('[name="note"]');
+    const timeStartField = subjectForm.querySelector('[name="time_start"]');
+    const timeEndField = subjectForm.querySelector('[name="time_end"]');
     const nameField = subjectForm.querySelector('[name="name"]');
     const examDateField = subjectForm.querySelector('[name="examDate"]');
     const colorField = subjectForm.querySelector('[name="color"]');
 
+    let noteText = event?.note || '';
+    let timeStart = '';
+    let timeEnd = '';
+    const match = noteText.match(/Inicio:\s*(\d{1,2}:\d{2})\s*[—\-]\s*Fin:\s*(\d{1,2}:\d{2})/);
+    if (match) {
+      timeStart = match[1];
+      timeEnd = match[2];
+      noteText = noteText.replace(/\s*\|\s*Inicio:.*$/, '').trim();
+    }
     if (idField instanceof HTMLInputElement) idField.value = event?.id || '';
     if (typeField instanceof HTMLSelectElement) typeField.value = 'event';
     if (titleField instanceof HTMLInputElement) titleField.value = event?.title || '';
     if (dateField instanceof HTMLInputElement) dateField.value = event?.date || '';
-    if (noteField instanceof HTMLInputElement) noteField.value = event?.note || '';
+    if (noteField instanceof HTMLInputElement) noteField.value = noteText;
+    if (timeStartField instanceof HTMLInputElement) timeStartField.value = timeStart;
+    if (timeEndField instanceof HTMLInputElement) timeEndField.value = timeEnd;
     if (nameField instanceof HTMLInputElement) nameField.value = '';
     if (examDateField instanceof HTMLInputElement) examDateField.value = '';
     if (colorField instanceof HTMLSelectElement) colorField.value = '';
@@ -708,41 +1305,6 @@ import { planDiaMock } from '../data/mock';
     if (subjectDelete) subjectDelete.style.display = 'inline-flex';
     openModal(subjectModal);
   }
-
-  subjectsGrid?.addEventListener('click', (e) => {
-    const target = e.target;
-    if (!(target instanceof HTMLElement)) return;
-    if (target.closest('.btn-delete-materia')) return;
-    const card = target.closest('.materia-card');
-    if (!card) return;
-    const id = card.dataset.id;
-    const subject = subjects.find((s) => s.id === id);
-    if (subject) openSubjectModal(subject);
-  });
-
-  subjectsGrid?.addEventListener('click', async (e) => {
-    const target = e.target;
-    if (!(target instanceof HTMLElement)) return;
-    const btn = target.closest('.btn-delete-materia');
-    if (!btn || !userId) return;
-    const id = btn.getAttribute('data-id');
-    if (!id) return;
-    if (!confirm('¿Eliminar esta materia del plan de estudio?')) return;
-    try {
-      const res = await fetch('/api/subjects', {
-        method: 'DELETE',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ id, userId })
-      });
-      if (!res.ok) throw new Error(await res.text());
-      subjects = subjects.filter((s) => s.id !== id);
-      renderSubjects();
-      if (viewMode === 'month') renderCalendar();
-      if (viewMode === 'week') renderWeek();
-    } catch (err) {
-      alert(err?.message || 'No se pudo eliminar la materia.');
-    }
-  });
 
   function handleCalendarClick(e) {
     const target = e.target;
@@ -762,9 +1324,83 @@ import { planDiaMock } from '../data/mock';
     }
   }
 
-  calendarGrid?.addEventListener('click', handleCalendarClick);
+  window.addEventListener('dashboard:day-selected', (e) => {
+    const d = e.detail;
+    if (d && d.date) openDayMenu(d.date);
+  });
+
+  calendarGrid?.addEventListener('click', (e) => {
+    const target = e.target instanceof HTMLElement ? e.target : null;
+    const item = target?.closest('.calendar-item');
+    const dayCell = target?.closest('.calendar-day');
+    if (dayCell && !item) {
+      const dateKey = dayCell.getAttribute('data-date');
+      if (dateKey) {
+        const [y, m, d] = dateKey.split('-').map(Number);
+        openDayMenu(new Date(y, m - 1, d));
+      }
+      return;
+    }
+    handleCalendarClick(e);
+  });
   calendarWeek?.addEventListener('click', handleCalendarClick);
 
-  renderCalendar();
+  document.getElementById('day-menu-events')?.addEventListener('click', () => {
+    if (selectedDayForMenu) {
+      currentDate = new Date(selectedDayForMenu);
+      viewMode = 'day';
+      if (calendarGrid) calendarGrid.style.display = 'none';
+      if (calendarWeek) calendarWeek.classList.remove('open');
+      if (calendarDayView) calendarDayView.classList.add('open');
+      renderDay();
+    }
+    closeModal(dayMenuModal);
+  });
+  document.getElementById('day-menu-new-subject')?.addEventListener('click', () => {
+    closeModal(dayMenuModal);
+    openNewItemModal();
+  });
+  document.getElementById('day-menu-new-note')?.addEventListener('click', () => {
+    if (selectedDayForMenu) openNewNoteForDate(formatDateKey(selectedDayForMenu));
+    closeModal(dayMenuModal);
+  });
+
+  viewListByPriorityBtn?.addEventListener('click', () => {
+    listByPriorityMode = !listByPriorityMode;
+    if (subjectsGrid) subjectsGrid.style.display = listByPriorityMode ? 'none' : 'grid';
+    if (subjectsListPriority) subjectsListPriority.style.display = listByPriorityMode ? 'block' : 'none';
+    viewListByPriorityBtn.textContent = listByPriorityMode ? 'Ver en grid' : 'Lista por prioridad';
+    if (listByPriorityMode) renderListByPriority();
+  });
+
+  document.querySelector('.materias-section')?.addEventListener('click', (e) => {
+    const t = e.target instanceof HTMLElement ? e.target : null;
+    if (!t) return;
+    if (t.closest('.btn-delete-materia')) {
+      e.preventDefault();
+      const id = t.closest('.btn-delete-materia')?.getAttribute('data-id');
+      if (!id || !userId) return;
+      if (!confirm('¿Eliminar esta materia del plan de estudio?')) return;
+      fetch('/api/subjects', { method: 'DELETE', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ id, userId }) })
+        .then((res) => { if (!res.ok) throw new Error(res.text()); return res; })
+        .then(() => {
+          subjects = subjects.filter((s) => s.id !== id);
+          renderSubjects();
+          if (viewMode === 'month') renderCalendar();
+          if (viewMode === 'week') renderWeek();
+          if (viewMode === 'day') renderDay();
+          if (listByPriorityMode) renderListByPriority();
+        })
+        .catch((err) => alert(err?.message || 'No se pudo eliminar.'));
+      return;
+    }
+    const card = t.closest('.materia-card');
+    if (card && !t.closest('.btn-delete-materia')) {
+      const id = card.dataset.id;
+      const subject = subjects.find((s) => s.id === id);
+      if (subject) openSubjectModal(subject);
+    }
+  });
+
   loadData();
 </script>

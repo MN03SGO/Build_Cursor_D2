@@ -13,7 +13,7 @@ export const GET: APIRoute = async ({ url }) => {
     const supabase = getSupabase();
     const { data, error } = await supabase
       .from('subjects')
-      .select('id, name, exam_date, priority, color')
+      .select('id, name, exam_date, time_start, time_end, priority, color')
       .eq('user_id', userId)
       .order('created_at', { ascending: false });
 
@@ -26,6 +26,8 @@ export const GET: APIRoute = async ({ url }) => {
       id: item.id,
       name: item.name,
       exam_date: item.exam_date,
+      time_start: item.time_start ?? '',
+      time_end: item.time_end ?? '',
       priority: item.priority ?? 'media',
       color: item.color ?? ''
     }));
@@ -56,6 +58,7 @@ export const POST: APIRoute = async ({ request }) => {
     typeof (payload as { name?: unknown }).name === 'string'
       ? (payload as { name?: string }).name?.trim()
       : '';
+  // Tabla subjects usa exam_date (no "date"). Frontend envía examDate (camelCase).
   const examDate =
     typeof (payload as { examDate?: unknown }).examDate === 'string'
       ? (payload as { examDate?: string }).examDate
@@ -68,9 +71,23 @@ export const POST: APIRoute = async ({ request }) => {
     typeof (payload as { color?: unknown }).color === 'string'
       ? (payload as { color?: string }).color
       : '';
+  const timeStart =
+    typeof (payload as { time_start?: unknown }).time_start === 'string'
+      ? (payload as { time_start?: string }).time_start?.trim()
+      : '';
+  const timeEnd =
+    typeof (payload as { time_end?: unknown }).time_end === 'string'
+      ? (payload as { time_end?: string }).time_end?.trim()
+      : '';
 
-  if (!userId || !name || !examDate) {
-    return new Response('Datos inválidos', { status: 400 });
+  if (!userId) {
+    return new Response('Debes iniciar sesión para crear una materia.', { status: 400 });
+  }
+  if (!name) {
+    return new Response('Escribe el nombre de la materia.', { status: 400 });
+  }
+  if (!examDate) {
+    return new Response('Elige la fecha de examen.', { status: 400 });
   }
 
   const colorByPriority =
@@ -85,15 +102,18 @@ export const POST: APIRoute = async ({ request }) => {
         user_id: userId,
         name,
         exam_date: examDate,
+        time_start: timeStart || null,
+        time_end: timeEnd || null,
         priority,
         color: finalColor
       })
-      .select('id, name, exam_date, priority, color')
+      .select('id, name, exam_date, time_start, time_end, priority, color')
       .single();
 
     if (error) {
       console.error('Error creando materia', error);
-      return new Response('Error creando materia', { status: 500 });
+      const msg = error?.message || 'Error creando materia';
+      return new Response(msg, { status: 500 });
     }
 
     return new Response(
@@ -101,6 +121,8 @@ export const POST: APIRoute = async ({ request }) => {
         id: row.id,
         name: row.name,
         exam_date: row.exam_date,
+        time_start: row.time_start ?? '',
+        time_end: row.time_end ?? '',
         priority: row.priority,
         color: row.color
       }),
@@ -145,6 +167,14 @@ export const PUT: APIRoute = async ({ request }) => {
     typeof (payload as { color?: unknown }).color === 'string'
       ? (payload as { color?: string }).color
       : '';
+  const timeStartPut =
+    typeof (payload as { time_start?: unknown }).time_start === 'string'
+      ? (payload as { time_start?: string }).time_start?.trim()
+      : '';
+  const timeEndPut =
+    typeof (payload as { time_end?: unknown }).time_end === 'string'
+      ? (payload as { time_end?: string }).time_end?.trim()
+      : '';
 
   if (!id || !userId || !name || !examDate) {
     return new Response('Datos inválidos', { status: 400 });
@@ -158,7 +188,14 @@ export const PUT: APIRoute = async ({ request }) => {
     const supabase = getSupabase();
     const { error } = await supabase
       .from('subjects')
-      .update({ name, exam_date: examDate, priority, color: finalColorPut })
+      .update({
+        name,
+        exam_date: examDate,
+        time_start: timeStartPut || null,
+        time_end: timeEndPut || null,
+        priority,
+        color: finalColorPut
+      })
       .eq('id', id)
       .eq('user_id', userId);
 
@@ -172,6 +209,8 @@ export const PUT: APIRoute = async ({ request }) => {
         id,
         name,
         exam_date: examDate,
+        time_start: timeStartPut,
+        time_end: timeEndPut,
         priority,
         color: finalColorPut
       }),
